@@ -1,15 +1,20 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Plus, Save, Settings, Shapes, Square, Circle, Underline } from "lucide-react";
+import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Plus, Save, Settings, Shapes, Square, Circle, Underline, Moon, Sun, Share, History, Copy, Smartphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { FontSelector } from "@/components/FontSelector";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 // Document templates
 const templates = [
@@ -19,6 +24,14 @@ const templates = [
   { id: "report", name: "Report", content: "# Report Title\n\n## Executive Summary\n\n## Introduction\n\n## Findings\n\n## Conclusion\n\n## Recommendations" }
 ];
 
+// Version history type
+interface VersionHistory {
+  id: string;
+  timestamp: Date;
+  title: string;
+  content: string;
+}
+
 const DocumentEditor = () => {
   const [documentTitle, setDocumentTitle] = useState("Untitled Document");
   const [documentContent, setDocumentContent] = useState("");
@@ -26,11 +39,56 @@ const DocumentEditor = () => {
   const [embeddedContent, setEmbeddedContent] = useState<Array<{type: string, id: string}>>([]);
   const [selectedShape, setSelectedShape] = useState<string | null>(null);
   const [activeTemplate, setActiveTemplate] = useState("blank");
+  const [currentFont, setCurrentFont] = useState("inter");
+  const [currentFontSize, setCurrentFontSize] = useState("text-base");
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
+  const [shareLink, setShareLink] = useState("");
+  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(isMobile);
+
+  // Apply dark mode class to document body
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, [isDarkMode]);
+
+  // Initialize version history with first version
+  useEffect(() => {
+    if (versionHistory.length === 0) {
+      saveVersion();
+    }
+  }, []);
 
   const handleSave = () => {
+    saveVersion();
     toast({
       title: "Document saved",
       description: "Your document has been saved successfully",
+    });
+  };
+
+  const saveVersion = () => {
+    const newVersion: VersionHistory = {
+      id: `version-${Date.now()}`,
+      timestamp: new Date(),
+      title: documentTitle,
+      content: documentContent
+    };
+    
+    setVersionHistory(prev => [...prev, newVersion]);
+  };
+
+  const restoreVersion = (version: VersionHistory) => {
+    setDocumentTitle(version.title);
+    setDocumentContent(version.content);
+    
+    toast({
+      title: "Version restored",
+      description: `Restored to version from ${version.timestamp.toLocaleString()}`,
     });
   };
 
@@ -100,8 +158,45 @@ const DocumentEditor = () => {
     });
   };
 
+  const handleFontChange = (font: string) => {
+    setCurrentFont(font);
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    setCurrentFontSize(size);
+  };
+
+  const toggleDarkMode = () => {
+    setIsDarkMode(!isDarkMode);
+  };
+
+  const generateShareLink = () => {
+    const baseUrl = window.location.origin;
+    const shareId = Date.now().toString(36);
+    const link = `${baseUrl}/document?share=${shareId}&title=${encodeURIComponent(documentTitle)}`;
+    setShareLink(link);
+    
+    // In a real app, you would save the document to a server here
+    // For demonstration, we're just generating a fake share link
+    
+    return link;
+  };
+
+  const copyShareLink = () => {
+    const link = shareLink || generateShareLink();
+    navigator.clipboard.writeText(link);
+    toast({
+      title: "Link copied",
+      description: "Share link copied to clipboard",
+    });
+  };
+
+  const toggleToolbar = () => {
+    setToolbarCollapsed(!toolbarCollapsed);
+  };
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className={`min-h-screen flex flex-col bg-background ${isDarkMode ? 'dark' : ''}`}>
       {/* Header */}
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
@@ -121,6 +216,12 @@ const DocumentEditor = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isMobile ? (
+              <Button variant="ghost" size="icon" onClick={toggleToolbar}>
+                <Smartphone className="h-5 w-5" />
+              </Button>
+            ) : null}
+            
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Save className="h-4 w-4 mr-2" />
               Save
@@ -139,6 +240,73 @@ const DocumentEditor = () => {
                 <DropdownMenuItem onClick={() => downloadDocument("pdf")}>PDF (.pdf)</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Share className="h-4 w-4 mr-2" />
+                  Share
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Share Document</DialogTitle>
+                  <DialogDescription>
+                    Anyone with the link can view this document.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2 mt-4">
+                  <Input 
+                    readOnly 
+                    value={shareLink || generateShareLink()} 
+                    className="flex-1"
+                  />
+                  <Button variant="outline" size="sm" onClick={copyShareLink}>
+                    <Copy className="h-4 w-4 mr-2" />
+                    Copy
+                  </Button>
+                </div>
+                <DialogFooter className="mt-4">
+                  <Button variant="outline" onClick={() => setShareLink("")}>Cancel</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <History className="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent align="end" className="w-[300px]">
+                <div className="space-y-2">
+                  <h3 className="font-medium">Version History</h3>
+                  <div className="max-h-[300px] overflow-y-auto space-y-2">
+                    {versionHistory.map((version) => (
+                      <div key={version.id} className="flex justify-between items-center border rounded-md p-2">
+                        <div>
+                          <p className="text-sm font-medium">{version.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {version.timestamp.toLocaleString()}
+                          </p>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          onClick={() => restoreVersion(version)}
+                        >
+                          Restore
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            
+            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
+              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+            </Button>
             
             <Sheet>
               <SheetTrigger asChild>
@@ -172,6 +340,15 @@ const DocumentEditor = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  
+                  <div className="flex items-center space-x-2">
+                    <Switch 
+                      id="dark-mode" 
+                      checked={isDarkMode}
+                      onCheckedChange={toggleDarkMode}
+                    />
+                    <Label htmlFor="dark-mode">Dark Mode</Label>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -180,19 +357,30 @@ const DocumentEditor = () => {
       </header>
 
       {/* Toolbar */}
-      <div className="border-b border-border bg-muted/30">
-        <div className="container py-2 flex items-center gap-1">
-          <Button variant="ghost" size="sm">
-            <Bold className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Italic className="h-4 w-4" />
-          </Button>
-          <Button variant="ghost" size="sm">
-            <Underline className="h-4 w-4" />
-          </Button>
+      <div className={`border-b border-border bg-muted/30 ${toolbarCollapsed ? 'hidden md:block' : ''}`}>
+        <div className="container py-2 flex flex-wrap items-center gap-1">
+          <div className="flex flex-wrap items-center gap-1 mr-2">
+            <Button variant="ghost" size="sm">
+              <Bold className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <Italic className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="sm">
+              <Underline className="h-4 w-4" />
+            </Button>
+          </div>
           
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
+          
+          <FontSelector 
+            onFontChange={handleFontChange} 
+            onFontSizeChange={handleFontSizeChange}
+            currentFont={currentFont}
+            currentSize={currentFontSize}
+          />
+          
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -213,7 +401,7 @@ const DocumentEditor = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -242,12 +430,15 @@ const DocumentEditor = () => {
           <Textarea
             value={documentContent}
             onChange={(e) => setDocumentContent(e.target.value)}
-            className="min-h-[calc(100vh-200px)] resize-none border-none focus-visible:ring-0 text-base"
+            className={`min-h-[calc(100vh-200px)] resize-none border-none focus-visible:ring-0 ${currentFontSize}`}
             placeholder="Start typing your document here..."
+            style={{ fontFamily: currentFont }}
           />
         ) : (
           <div className="min-h-[calc(100vh-200px)] border rounded-md p-4">
-            <div className="text-base mb-6">{documentContent}</div>
+            <div className={`${currentFontSize} mb-6`} style={{ fontFamily: currentFont }}>
+              {documentContent}
+            </div>
             
             {embeddedContent.map(content => (
               <div key={content.id} className="border rounded-md p-4 mb-4">
