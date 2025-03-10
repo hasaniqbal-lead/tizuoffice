@@ -5,16 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, FileSpreadsheet, FileText, Plus, Save, Settings, Shapes, Circle, Square, Triangle, Trash } from "lucide-react";
+import { 
+  ArrowLeft, Download, FileSpreadsheet, FileText, Plus, Save, Settings, 
+  Shapes, Circle, Square, Triangle, Trash, Bold, Italic, Underline, Type, 
+  AlignLeft, AlignCenter, AlignRight
+} from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface Slide {
   id: string;
   title: string;
   content: string;
+  fontFamily: string;
+  fontSize: string;
+  fontColor: string;
   shapes: Array<{ type: string; position: { x: number; y: number } }>;
 }
 
@@ -23,39 +32,83 @@ const templates = [
   { 
     id: "blank", 
     name: "Blank Presentation", 
-    slides: [{ id: "slide-1", title: "Slide 1", content: "Your content here...", shapes: [] }] 
+    slides: [{ id: "slide-1", title: "Slide 1", content: "Your content here...", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] }] 
   },
   {
     id: "business", 
     name: "Business Presentation", 
     slides: [
-      { id: "slide-1", title: "Company Overview", content: "Insert your company description here", shapes: [] },
-      { id: "slide-2", title: "Products & Services", content: "List your key products and services", shapes: [] },
-      { id: "slide-3", title: "Market Analysis", content: "Share insights about your target market", shapes: [] },
-      { id: "slide-4", title: "Financial Projections", content: "Present your financial forecasts", shapes: [] },
-      { id: "slide-5", title: "Next Steps", content: "Outline the path forward", shapes: [] }
+      { id: "slide-1", title: "Company Overview", content: "Insert your company description here", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-2", title: "Products & Services", content: "List your key products and services", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-3", title: "Market Analysis", content: "Share insights about your target market", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-4", title: "Financial Projections", content: "Present your financial forecasts", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-5", title: "Next Steps", content: "Outline the path forward", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] }
     ]
   },
   {
     id: "educational", 
     name: "Educational Presentation", 
     slides: [
-      { id: "slide-1", title: "Topic Introduction", content: "Introduce the main concept", shapes: [] },
-      { id: "slide-2", title: "Key Points", content: "List the main learning objectives", shapes: [] },
-      { id: "slide-3", title: "Examples", content: "Provide practical examples", shapes: [] },
-      { id: "slide-4", title: "Summary", content: "Recap the key takeaways", shapes: [] },
-      { id: "slide-5", title: "Questions & Discussion", content: "Open the floor for questions", shapes: [] }
+      { id: "slide-1", title: "Topic Introduction", content: "Introduce the main concept", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-2", title: "Key Points", content: "List the main learning objectives", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-3", title: "Examples", content: "Provide practical examples", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-4", title: "Summary", content: "Recap the key takeaways", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] },
+      { id: "slide-5", title: "Questions & Discussion", content: "Open the floor for questions", fontFamily: "inter", fontSize: "text-base", fontColor: "text-foreground", shapes: [] }
     ]
   }
+];
+
+// Font sizes
+const fontSizes = [
+  { id: "xs", name: "9", class: "text-xs" },
+  { id: "sm", name: "10", class: "text-sm" },
+  { id: "base", name: "12", class: "text-base" },
+  { id: "lg", name: "14", class: "text-lg" },
+  { id: "xl", name: "16", class: "text-xl" },
+  { id: "2xl", name: "18", class: "text-2xl" },
+  { id: "3xl", name: "24", class: "text-3xl" },
+  { id: "4xl", name: "36", class: "text-4xl" },
+];
+
+// Font families
+const fontFamilies = [
+  { id: "inter", name: "Inter", class: "inter" },
+  { id: "roboto", name: "Roboto", class: "roboto" },
+  { id: "lato", name: "Lato", class: "lato" },
+  { id: "montserrat", name: "Montserrat", class: "montserrat" },
+  { id: "merriweather", name: "Merriweather", class: "merriweather" },
+];
+
+// Font colors
+const fontColors = [
+  { id: "default", name: "Default", class: "text-foreground" },
+  { id: "primary", name: "Primary", class: "text-primary" },
+  { id: "secondary", name: "Secondary", class: "text-secondary" },
+  { id: "accent", name: "Accent", class: "text-blue-600" },
+  { id: "success", name: "Success", class: "text-green-600" },
+  { id: "warning", name: "Warning", class: "text-yellow-600" },
+  { id: "error", name: "Error", class: "text-red-600" },
+  { id: "info", name: "Info", class: "text-sky-600" },
 ];
 
 const PresentationEditor = () => {
   const [presentationTitle, setPresentationTitle] = useState("Untitled Presentation");
   const [slides, setSlides] = useState<Slide[]>([
-    { id: "slide-1", title: "Slide 1", content: "Your content here...", shapes: [] }
+    { 
+      id: "slide-1", 
+      title: "Slide 1", 
+      content: "Your content here...", 
+      fontFamily: "inter", 
+      fontSize: "text-base", 
+      fontColor: "text-foreground", 
+      shapes: [] 
+    }
   ]);
   const [activeSlide, setActiveSlide] = useState("slide-1");
   const [activeTemplate, setActiveTemplate] = useState("blank");
+  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
+  
+  const isMobile = useIsMobile();
 
   const addSlide = () => {
     const newSlideId = `slide-${slides.length + 1}`;
@@ -63,6 +116,9 @@ const PresentationEditor = () => {
       id: newSlideId,
       title: `Slide ${slides.length + 1}`,
       content: "Your content here...",
+      fontFamily: "inter", 
+      fontSize: "text-base", 
+      fontColor: "text-foreground",
       shapes: []
     };
     setSlides([...slides, newSlide]);
@@ -97,6 +153,24 @@ const PresentationEditor = () => {
   const updateSlideTitle = (id: string, title: string) => {
     setSlides(slides.map(slide => 
       slide.id === id ? { ...slide, title } : slide
+    ));
+  };
+  
+  const updateSlideFontFamily = (id: string, fontFamily: string) => {
+    setSlides(slides.map(slide => 
+      slide.id === id ? { ...slide, fontFamily } : slide
+    ));
+  };
+  
+  const updateSlideFontSize = (id: string, fontSize: string) => {
+    setSlides(slides.map(slide => 
+      slide.id === id ? { ...slide, fontSize } : slide
+    ));
+  };
+  
+  const updateSlideFontColor = (id: string, fontColor: string) => {
+    setSlides(slides.map(slide => 
+      slide.id === id ? { ...slide, fontColor } : slide
     ));
   };
 
@@ -198,6 +272,10 @@ const PresentationEditor = () => {
       description: `Your presentation has been downloaded as a ${format.toUpperCase()} file`,
     });
   };
+  
+  const toggleToolbar = () => {
+    setToolbarCollapsed(!toolbarCollapsed);
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -220,6 +298,12 @@ const PresentationEditor = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            {isMobile && (
+              <Button variant="ghost" size="icon" onClick={toggleToolbar}>
+                <Plus className="h-5 w-5" />
+              </Button>
+            )}
+            
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Save className="h-4 w-4 mr-2" />
               Save
@@ -280,8 +364,128 @@ const PresentationEditor = () => {
       </header>
 
       {/* Toolbar */}
-      <div className="border-b border-border bg-muted/30">
-        <div className="container py-2 flex items-center gap-2">
+      <div className={`border-b border-border bg-muted/30 ${toolbarCollapsed ? 'hidden' : 'block'}`}>
+        <div className="container py-2 flex flex-wrap items-center gap-2">
+          {/* Text formatting */}
+          <div className="flex items-center gap-1 mr-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Bold className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Bold</TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Italic className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Italic</TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Underline className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Underline</TooltipContent>
+            </Tooltip>
+          </div>
+          
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
+          
+          {/* Text alignment */}
+          <div className="flex items-center gap-1 mr-2">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <AlignLeft className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Align left</TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <AlignCenter className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Align center</TooltipContent>
+            </Tooltip>
+            
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <AlignRight className="h-4 w-4" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Align right</TooltipContent>
+            </Tooltip>
+          </div>
+          
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
+          
+          {/* Font family */}
+          <Select 
+            value={slides.find(s => s.id === activeSlide)?.fontFamily || "inter"}
+            onValueChange={(val) => updateSlideFontFamily(activeSlide, val)}
+          >
+            <SelectTrigger className="w-[120px] h-8">
+              <SelectValue placeholder="Font" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontFamilies.map(font => (
+                <SelectItem key={font.id} value={font.class}>
+                  {font.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Font size */}
+          <Select 
+            value={slides.find(s => s.id === activeSlide)?.fontSize || "text-base"}
+            onValueChange={(val) => updateSlideFontSize(activeSlide, val)}
+          >
+            <SelectTrigger className="w-[80px] h-8">
+              <SelectValue placeholder="Size" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontSizes.map(size => (
+                <SelectItem key={size.id} value={size.class}>
+                  {size.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          {/* Font color */}
+          <Select 
+            value={slides.find(s => s.id === activeSlide)?.fontColor || "text-foreground"}
+            onValueChange={(val) => updateSlideFontColor(activeSlide, val)}
+          >
+            <SelectTrigger className="w-[120px] h-8">
+              <SelectValue placeholder="Color" />
+            </SelectTrigger>
+            <SelectContent>
+              {fontColors.map(color => (
+                <SelectItem key={color.id} value={color.class}>
+                  <div className="flex items-center">
+                    <div className={`w-3 h-3 rounded-full mr-2 ${color.class === 'text-foreground' ? 'bg-foreground' : color.class.replace('text-', 'bg-')}`}></div>
+                    {color.name}
+                  </div>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
+          
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" size="sm">
@@ -305,7 +509,7 @@ const PresentationEditor = () => {
             </DropdownMenuContent>
           </DropdownMenu>
           
-          <div className="h-6 w-px bg-border mx-2" />
+          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
           
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -333,7 +537,7 @@ const PresentationEditor = () => {
       </div>
 
       {/* Presentation editor */}
-      <main className="flex-1 container py-6 grid grid-cols-4 gap-6">
+      <main className="flex-1 container py-6 grid grid-cols-1 md:grid-cols-4 gap-6">
         {/* Slides list */}
         <div className="col-span-1 border rounded-md overflow-hidden">
           <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
@@ -397,7 +601,8 @@ const PresentationEditor = () => {
                         <Textarea
                           value={slide.content}
                           onChange={(e) => updateSlideContent(slide.id, e.target.value)}
-                          className="min-h-[250px] text-base"
+                          className={`min-h-[250px] text-base ${slide.fontSize} ${slide.fontColor}`}
+                          style={{ fontFamily: slide.fontFamily }}
                         />
                       </div>
                     </TabsContent>
@@ -409,7 +614,12 @@ const PresentationEditor = () => {
                       <div className="p-8 flex items-center justify-center min-h-[400px]">
                         <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg p-10 border">
                           <h2 className="text-2xl font-bold mb-6">{slide.title}</h2>
-                          <p className="whitespace-pre-line">{slide.content}</p>
+                          <p 
+                            className={`whitespace-pre-line ${slide.fontSize} ${slide.fontColor}`}
+                            style={{ fontFamily: slide.fontFamily }}
+                          >
+                            {slide.content}
+                          </p>
                           
                           {/* We would render actual shapes here with proper positioning in a real app */}
                           {slide.shapes.length > 0 && (
