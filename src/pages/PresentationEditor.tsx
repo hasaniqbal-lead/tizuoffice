@@ -5,29 +5,65 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, Download, Plus, Save, Settings, Trash } from "lucide-react";
+import { ArrowLeft, Download, FileSpreadsheet, FileText, Plus, Save, Settings, Shapes, Circle, Square, Triangle, Trash } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 interface Slide {
   id: string;
   title: string;
   content: string;
+  shapes: Array<{ type: string; position: { x: number; y: number } }>;
 }
+
+// Presentation templates
+const templates = [
+  { 
+    id: "blank", 
+    name: "Blank Presentation", 
+    slides: [{ id: "slide-1", title: "Slide 1", content: "Your content here...", shapes: [] }] 
+  },
+  {
+    id: "business", 
+    name: "Business Presentation", 
+    slides: [
+      { id: "slide-1", title: "Company Overview", content: "Insert your company description here", shapes: [] },
+      { id: "slide-2", title: "Products & Services", content: "List your key products and services", shapes: [] },
+      { id: "slide-3", title: "Market Analysis", content: "Share insights about your target market", shapes: [] },
+      { id: "slide-4", title: "Financial Projections", content: "Present your financial forecasts", shapes: [] },
+      { id: "slide-5", title: "Next Steps", content: "Outline the path forward", shapes: [] }
+    ]
+  },
+  {
+    id: "educational", 
+    name: "Educational Presentation", 
+    slides: [
+      { id: "slide-1", title: "Topic Introduction", content: "Introduce the main concept", shapes: [] },
+      { id: "slide-2", title: "Key Points", content: "List the main learning objectives", shapes: [] },
+      { id: "slide-3", title: "Examples", content: "Provide practical examples", shapes: [] },
+      { id: "slide-4", title: "Summary", content: "Recap the key takeaways", shapes: [] },
+      { id: "slide-5", title: "Questions & Discussion", content: "Open the floor for questions", shapes: [] }
+    ]
+  }
+];
 
 const PresentationEditor = () => {
   const [presentationTitle, setPresentationTitle] = useState("Untitled Presentation");
   const [slides, setSlides] = useState<Slide[]>([
-    { id: "slide-1", title: "Slide 1", content: "Your content here..." }
+    { id: "slide-1", title: "Slide 1", content: "Your content here...", shapes: [] }
   ]);
   const [activeSlide, setActiveSlide] = useState("slide-1");
+  const [activeTemplate, setActiveTemplate] = useState("blank");
 
   const addSlide = () => {
     const newSlideId = `slide-${slides.length + 1}`;
     const newSlide = {
       id: newSlideId,
       title: `Slide ${slides.length + 1}`,
-      content: "Your content here..."
+      content: "Your content here...",
+      shapes: []
     };
     setSlides([...slides, newSlide]);
     setActiveSlide(newSlideId);
@@ -64,6 +100,32 @@ const PresentationEditor = () => {
     ));
   };
 
+  const addShape = (id: string, shapeType: string) => {
+    setSlides(slides.map(slide => 
+      slide.id === id 
+        ? { 
+            ...slide, 
+            shapes: [...slide.shapes, { 
+              type: shapeType, 
+              position: { x: 50, y: 50 } 
+            }] 
+          } 
+        : slide
+    ));
+    
+    // Also add a shape marker to the content
+    const slideIndex = slides.findIndex(slide => slide.id === id);
+    if (slideIndex !== -1) {
+      const shapeText = shapeType === "square" ? "□ " : shapeType === "circle" ? "○ " : "△ ";
+      updateSlideContent(id, slides[slideIndex].content + "\n\n" + shapeText + " Shape added");
+    }
+    
+    toast({
+      title: "Shape added",
+      description: `Added ${shapeType} to your slide`,
+    });
+  };
+
   const handleSave = () => {
     toast({
       title: "Presentation saved",
@@ -71,23 +133,69 @@ const PresentationEditor = () => {
     });
   };
 
-  const downloadPresentation = () => {
-    // Create a simple text representation of the presentation
-    const content = slides.map(slide => 
-      `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
-    ).join("");
+  const applyTemplate = (templateId: string) => {
+    const template = templates.find(t => t.id === templateId);
+    if (template) {
+      setSlides([...template.slides]);
+      setActiveSlide(template.slides[0].id);
+      setActiveTemplate(templateId);
+      toast({
+        title: "Template applied",
+        description: `Applied ${template.name} template`,
+      });
+    }
+  };
+
+  const downloadPresentation = (format: string) => {
+    let filename = `${presentationTitle}`;
+    let content = "";
+    let mimeType = "";
+    let fileExtension = "";
+    
+    switch (format) {
+      case "ppt":
+        // In a real app, would generate actual PPT content
+        content = slides.map(slide => 
+          `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
+        ).join("");
+        mimeType = "application/vnd.ms-powerpoint";
+        fileExtension = ".ppt";
+        break;
+      case "pdf":
+        // In a real app, would generate actual PDF content
+        content = slides.map(slide => 
+          `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
+        ).join("");
+        mimeType = "application/pdf";
+        fileExtension = ".pdf";
+        break;
+      case "jpg":
+        // For demo purposes, just notify that this would normally generate images
+        toast({
+          title: "Feature coming soon",
+          description: "JPG export will be available in the next update",
+        });
+        return;
+      case "txt":
+      default:
+        content = slides.map(slide => 
+          `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
+        ).join("");
+        mimeType = "text/plain";
+        fileExtension = ".txt";
+    }
     
     const element = document.createElement("a");
-    const file = new Blob([content], { type: "text/plain" });
+    const file = new Blob([content], { type: mimeType });
     element.href = URL.createObjectURL(file);
-    element.download = `${presentationTitle}.txt`;
+    element.download = `${filename}${fileExtension}`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
 
     toast({
       title: "Presentation downloaded",
-      description: "Your presentation has been downloaded as a text file",
+      description: `Your presentation has been downloaded as a ${format.toUpperCase()} file`,
     });
   };
 
@@ -116,10 +224,22 @@ const PresentationEditor = () => {
               <Save className="h-4 w-4 mr-2" />
               Save
             </Button>
-            <Button variant="outline" size="sm" onClick={downloadPresentation}>
-              <Download className="h-4 w-4 mr-2" />
-              Download
-            </Button>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Download className="h-4 w-4 mr-2" />
+                  Download
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem onClick={() => downloadPresentation("txt")}>Text (.txt)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadPresentation("ppt")}>PowerPoint (.ppt)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadPresentation("pdf")}>PDF (.pdf)</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => downloadPresentation("jpg")}>JPEG Slides (.jpg)</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Sheet>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon">
@@ -133,14 +253,84 @@ const PresentationEditor = () => {
                     Configure your presentation settings here.
                   </SheetDescription>
                 </SheetHeader>
-                <div className="py-4">
-                  <p className="text-sm text-muted-foreground">More settings coming soon</p>
+                <div className="py-4 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Templates</h3>
+                    <Select 
+                      value={activeTemplate} 
+                      onValueChange={applyTemplate}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select template" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {templates.map(template => (
+                          <SelectItem key={template.id} value={template.id}>
+                            {template.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </header>
+
+      {/* Toolbar */}
+      <div className="border-b border-border bg-muted/30">
+        <div className="container py-2 flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Shapes className="h-4 w-4 mr-1" />
+                Shapes
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem onClick={() => addShape(activeSlide, "square")}>
+                <Square className="h-4 w-4 mr-2" />
+                Square
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addShape(activeSlide, "circle")}>
+                <Circle className="h-4 w-4 mr-2" />
+                Circle
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => addShape(activeSlide, "triangle")}>
+                <Triangle className="h-4 w-4 mr-2" />
+                Triangle
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          
+          <div className="h-6 w-px bg-border mx-2" />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <Plus className="h-4 w-4 mr-1" />
+                Create
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link to="/document">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Document
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/spreadsheet">
+                  <FileSpreadsheet className="h-4 w-4 mr-2" />
+                  Spreadsheet
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+      </div>
 
       {/* Presentation editor */}
       <main className="flex-1 container py-6 grid grid-cols-4 gap-6">
@@ -220,6 +410,19 @@ const PresentationEditor = () => {
                         <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg p-10 border">
                           <h2 className="text-2xl font-bold mb-6">{slide.title}</h2>
                           <p className="whitespace-pre-line">{slide.content}</p>
+                          
+                          {/* We would render actual shapes here with proper positioning in a real app */}
+                          {slide.shapes.length > 0 && (
+                            <div className="mt-4">
+                              <div className="flex gap-2 flex-wrap">
+                                {slide.shapes.map((shape, idx) => (
+                                  <div key={idx} className="inline-block text-xl">
+                                    {shape.type === "square" ? "□" : shape.type === "circle" ? "○" : "△"}
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </TabsContent>
