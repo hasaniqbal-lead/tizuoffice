@@ -2,10 +2,13 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
-import { FileText, FileSpreadsheet, PresentationIcon, Plus } from "lucide-react";
+import { FileText, FileSpreadsheet, PresentationIcon, Plus, Moon, Sun } from "lucide-react";
 import { toast } from "@/components/ui/use-toast";
+import { useTheme } from "@/components/ThemeProvider";
 
 const Index = () => {
+  const { isDarkMode, toggleDarkMode } = useTheme();
+
   const handleCreateNew = (type: string) => {
     toast({
       title: "Creating new document",
@@ -17,7 +20,7 @@ const Index = () => {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border">
-        <div className="container py-4 flex items-center">
+        <div className="container py-4 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img 
               src="/lovable-uploads/bd04e403-b177-48b8-ad6c-a56eddb0f227.png" 
@@ -26,6 +29,17 @@ const Index = () => {
             />
             <h1 className="text-3xl font-bold text-[#8e44ad]">Tizu Office</h1>
           </div>
+          
+          {/* Dark Mode Toggle */}
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={toggleDarkMode} 
+            className="ml-auto"
+            aria-label="Toggle dark mode"
+          >
+            {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
         </div>
       </header>
 

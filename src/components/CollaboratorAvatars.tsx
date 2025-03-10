@@ -1,7 +1,7 @@
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { useMediaQuery } from "@/hooks/use-mobile";
 
 type CollaboratorProps = {
   users: Array<{
@@ -13,7 +13,7 @@ type CollaboratorProps = {
 };
 
 export function CollaboratorAvatars({ users, limit = 5 }: CollaboratorProps) {
-  const isMobile = useIsMobile();
+  const isMobile = useMediaQuery("(max-width: 768px)");
   
   // Limit the number of avatars shown
   const displayUsers = users.slice(0, limit);

@@ -1,6 +1,7 @@
 
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import Index from "./pages/Index";
 import DocumentEditor from "./pages/DocumentEditor";
 import SpreadsheetEditor from "./pages/SpreadsheetEditor";
@@ -15,16 +16,18 @@ function App() {
   return (
     <ThemeProvider>
       <CollaborationProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/document" element={<DocumentEditor />} />
-            <Route path="/spreadsheet" element={<SpreadsheetEditor />} />
-            <Route path="/presentation" element={<PresentationEditor />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <Toaster />
-        </Router>
+        <TooltipProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/document" element={<DocumentEditor />} />
+              <Route path="/spreadsheet" element={<SpreadsheetEditor />} />
+              <Route path="/presentation" element={<PresentationEditor />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            <Toaster />
+          </Router>
+        </TooltipProvider>
       </CollaborationProvider>
     </ThemeProvider>
   );

@@ -5,23 +5,23 @@ export function useMediaQuery(query: string): boolean {
   const [matches, setMatches] = useState(false);
 
   useEffect(() => {
-    const mediaQuery = window.matchMedia(query);
-    setMatches(mediaQuery.matches);
-
-    const handler = (event: MediaQueryListEvent) => {
-      setMatches(event.matches);
-    };
-
-    mediaQuery.addEventListener("change", handler);
+    const media = window.matchMedia(query);
+    if (media.matches !== matches) {
+      setMatches(media.matches);
+    }
+    
+    const listener = () => setMatches(media.matches);
+    media.addEventListener("change", listener);
+    
     return () => {
-      mediaQuery.removeEventListener("change", handler);
+      media.removeEventListener("change", listener);
     };
-  }, [query]);
+  }, [matches, query]);
 
   return matches;
 }
 
-// Add useIsMobile hook that uses useMediaQuery to detect mobile devices
+// Additional hook for common mobile detection
 export function useIsMobile(): boolean {
   return useMediaQuery("(max-width: 768px)");
 }
