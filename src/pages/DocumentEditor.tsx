@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Save, Settings, Shapes, Square, Circle, Underline } from "lucide-react";
+import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Plus, Save, Settings, Shapes, Square, Circle, Underline } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
