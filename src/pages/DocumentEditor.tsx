@@ -1,20 +1,24 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Plus, Save, Settings, Shapes, Square, Circle, Underline, Moon, Sun, Share, History, Copy, Smartphone } from "lucide-react";
-import { Link } from "react-router-dom";
+import { ArrowLeft, Bold, Download, FileSpreadsheet, FileText, Italic, PresentationIcon, Plus, Save, Settings, Shapes, Square, Circle, Underline, Moon, Sun, Share, History, Copy, Smartphone, Users, Link as LinkIcon, Check, Palette } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FontSelector } from "@/components/FontSelector";
+import { FontLibrary, themes } from "@/components/FontLibrary";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { useMediaQuery } from "@/hooks/use-mobile";
+import { useMediaQuery, useIsMobile } from "@/hooks/use-mobile";
+import { CollaboratorAvatars } from "@/components/CollaboratorAvatars";
+import { useTheme } from "@/components/ThemeProvider";
+import { useCollaboration } from "@/components/CollaborationProvider";
 
 // Document templates
 const templates = [
@@ -41,20 +45,37 @@ const DocumentEditor = () => {
   const [activeTemplate, setActiveTemplate] = useState("blank");
   const [currentFont, setCurrentFont] = useState("inter");
   const [currentFontSize, setCurrentFontSize] = useState("text-base");
-  const [isDarkMode, setIsDarkMode] = useState(false);
   const [versionHistory, setVersionHistory] = useState<VersionHistory[]>([]);
   const [shareLink, setShareLink] = useState("");
-  const isMobile = useMediaQuery("(max-width: 768px)");
+  const [userName, setUserName] = useState("Guest");
+  const [joinDialogOpen, setJoinDialogOpen] = useState(false);
+  const [docIdToJoin, setDocIdToJoin] = useState("");
+  
+  const isMobile = useIsMobile();
   const [toolbarCollapsed, setToolbarCollapsed] = useState(isMobile);
+  
+  const { theme, setTheme, isDarkMode, toggleDarkMode } = useTheme();
+  const { 
+    shareDocument, 
+    joinDocument, 
+    updateDocument, 
+    currentUsers, 
+    isCollaborating,
+    documentId
+  } = useCollaboration();
+  
+  const location = useLocation();
 
-  // Apply dark mode class to document body
+  // Check for collaboration parameters in URL
   useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
+    const params = new URLSearchParams(location.search);
+    const shareId = params.get("share");
+    
+    if (shareId) {
+      setDocIdToJoin(shareId);
+      setJoinDialogOpen(true);
     }
-  }, [isDarkMode]);
+  }, [location]);
 
   // Initialize version history with first version
   useEffect(() => {
@@ -62,6 +83,13 @@ const DocumentEditor = () => {
       saveVersion();
     }
   }, []);
+  
+  // Sync document changes when collaborating
+  useEffect(() => {
+    if (isCollaborating) {
+      updateDocument(documentTitle, documentContent);
+    }
+  }, [documentTitle, documentContent, isCollaborating]);
 
   const handleSave = () => {
     saveVersion();
@@ -166,20 +194,26 @@ const DocumentEditor = () => {
     setCurrentFontSize(size);
   };
 
-  const toggleDarkMode = () => {
-    setIsDarkMode(!isDarkMode);
-  };
-
   const generateShareLink = () => {
-    const baseUrl = window.location.origin;
-    const shareId = Date.now().toString(36);
-    const link = `${baseUrl}/document?share=${shareId}&title=${encodeURIComponent(documentTitle)}`;
-    setShareLink(link);
-    
-    // In a real app, you would save the document to a server here
-    // For demonstration, we're just generating a fake share link
-    
-    return link;
+    if (isCollaborating && documentId) {
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/document?share=${documentId}`;
+      setShareLink(link);
+      return link;
+    } else {
+      // Create a new shared document
+      const docId = shareDocument(documentTitle, documentContent);
+      const baseUrl = window.location.origin;
+      const link = `${baseUrl}/document?share=${docId}`;
+      setShareLink(link);
+      
+      toast({
+        title: "Document shared",
+        description: "Anyone with the link can now view and edit this document",
+      });
+      
+      return link;
+    }
   };
 
   const copyShareLink = () => {
@@ -191,6 +225,26 @@ const DocumentEditor = () => {
     });
   };
 
+  const handleJoinDocument = () => {
+    if (docIdToJoin) {
+      const success = joinDocument(docIdToJoin, userName);
+      
+      if (success) {
+        setJoinDialogOpen(false);
+        toast({
+          title: "Document joined",
+          description: "You have joined the shared document",
+        });
+      } else {
+        toast({
+          title: "Error joining document",
+          description: "The document could not be found",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   const toggleToolbar = () => {
     setToolbarCollapsed(!toolbarCollapsed);
   };
@@ -198,7 +252,7 @@ const DocumentEditor = () => {
   return (
     <div className={`min-h-screen flex flex-col bg-background ${isDarkMode ? 'dark' : ''}`}>
       {/* Header */}
-      <header className="border-b border-border">
+      <header className="border-b border-border sticky top-0 z-10 bg-background">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" asChild>
@@ -221,6 +275,10 @@ const DocumentEditor = () => {
                 <Smartphone className="h-5 w-5" />
               </Button>
             ) : null}
+            
+            {isCollaborating && (
+              <CollaboratorAvatars users={currentUsers} />
+            )}
             
             <Button variant="outline" size="sm" onClick={handleSave}>
               <Save className="h-4 w-4 mr-2" />
@@ -252,7 +310,7 @@ const DocumentEditor = () => {
                 <DialogHeader>
                   <DialogTitle>Share Document</DialogTitle>
                   <DialogDescription>
-                    Anyone with the link can view this document.
+                    Anyone with the link can view and edit this document.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="flex items-center space-x-2 mt-4">
@@ -271,6 +329,60 @@ const DocumentEditor = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
+            
+            <Dialog open={joinDialogOpen} onOpenChange={setJoinDialogOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Join Shared Document</DialogTitle>
+                  <DialogDescription>
+                    Enter your name to join this shared document
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Your Name</Label>
+                    <Input 
+                      id="name" 
+                      value={userName} 
+                      onChange={(e) => setUserName(e.target.value)}
+                      placeholder="Enter your name" 
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="docId">Document ID</Label>
+                    <Input 
+                      id="docId" 
+                      value={docIdToJoin} 
+                      onChange={(e) => setDocIdToJoin(e.target.value)}
+                      placeholder="Document ID" 
+                      disabled={!!docIdToJoin}
+                    />
+                  </div>
+                </div>
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setJoinDialogOpen(false)}>Cancel</Button>
+                  <Button onClick={handleJoinDocument}>Join Document</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Users className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => setJoinDialogOpen(true)}>
+                  <LinkIcon className="h-4 w-4 mr-2" />
+                  Join Document
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={generateShareLink}>
+                  <Share className="h-4 w-4 mr-2" />
+                  Share Document
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <Popover>
               <PopoverTrigger asChild>
@@ -304,9 +416,34 @@ const DocumentEditor = () => {
               </PopoverContent>
             </Popover>
             
-            <Button variant="ghost" size="icon" onClick={toggleDarkMode}>
-              {isDarkMode ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Palette className="h-5 w-5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={toggleDarkMode}>
+                  {isDarkMode ? <Sun className="h-4 w-4 mr-2" /> : <Moon className="h-4 w-4 mr-2" />}
+                  {isDarkMode ? "Light Mode" : "Dark Mode"}
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled className="font-semibold pt-2 opacity-50">
+                  Color Themes
+                </DropdownMenuItem>
+                {themes.map((themeOption) => (
+                  <DropdownMenuItem 
+                    key={themeOption.value}
+                    onClick={() => setTheme(themeOption.value)}
+                    className="flex items-center justify-between"
+                  >
+                    {themeOption.label}
+                    {theme === themeOption.value && (
+                      <Check className="h-4 w-4 ml-2" />
+                    )}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
             
             <Sheet>
               <SheetTrigger asChild>
@@ -349,6 +486,25 @@ const DocumentEditor = () => {
                     />
                     <Label htmlFor="dark-mode">Dark Mode</Label>
                   </div>
+                  
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Color Theme</h3>
+                    <Select 
+                      value={theme} 
+                      onValueChange={setTheme}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select theme" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {themes.map(themeOption => (
+                          <SelectItem key={themeOption.value} value={themeOption.value}>
+                            {themeOption.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -358,7 +514,7 @@ const DocumentEditor = () => {
 
       {/* Toolbar */}
       <div className={`border-b border-border bg-muted/30 ${toolbarCollapsed ? 'hidden md:block' : ''}`}>
-        <div className="container py-2 flex flex-wrap items-center gap-1">
+        <div className="container py-2 flex flex-wrap items-center gap-1 overflow-x-auto">
           <div className="flex flex-wrap items-center gap-1 mr-2">
             <Button variant="ghost" size="sm">
               <Bold className="h-4 w-4" />
@@ -373,11 +529,12 @@ const DocumentEditor = () => {
           
           <div className="h-6 w-px bg-border mx-2 hidden md:block" />
           
-          <FontSelector 
+          <FontLibrary 
             onFontChange={handleFontChange} 
             onFontSizeChange={handleFontSizeChange}
             currentFont={currentFont}
             currentSize={currentFontSize}
+            isMobile={isMobile}
           />
           
           <div className="h-6 w-px bg-border mx-2 hidden md:block" />
