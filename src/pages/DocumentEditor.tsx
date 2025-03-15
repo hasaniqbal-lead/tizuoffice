@@ -1,26 +1,22 @@
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { 
-  ArrowLeft, Download, FileSpreadsheet, PresentationIcon, Plus, Save, Settings, 
-  Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  FileText, ChevronDown
-} from "lucide-react";
+import { Settings, ArrowLeft } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { FontLibrary } from "@/components/FontLibrary";
-import { CollaboratorAvatars } from "@/components/CollaboratorAvatars";
-import { useCollaboration } from "@/components/CollaborationProvider";
 import { Switch } from "@/components/ui/switch";
 import { useTheme } from "@/components/ThemeProvider";
 import { Moon, Sun } from "lucide-react";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { HighContrastToggle } from "@/components/HighContrastToggle";
+import { useCollaboration } from "@/components/CollaborationProvider";
+import { CollaboratorAvatars } from "@/components/CollaboratorAvatars";
+import { RibbonMenu } from "@/components/RibbonMenu";
+import { AppLogo } from "@/components/AppLogo";
+import { AppFooter } from "@/components/AppFooter";
 
 // Sample collaborators data
 const sampleCollaborators = [
@@ -34,10 +30,10 @@ const DocumentEditor = () => {
   const [documentContent, setDocumentContent] = useState("");
   const [selectedFont, setSelectedFont] = useState("inter");
   const [selectedFontSize, setSelectedFontSize] = useState("text-base");
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
   const { shareDocument, currentUsers, isCollaborating } = useCollaboration();
   const { isDarkMode, toggleDarkMode } = useTheme();
   const isMobile = useIsMobile();
+  const editorRef = useRef<HTMLTextAreaElement>(null);
 
   const handleFontChange = (font: string) => {
     setSelectedFont(font);
@@ -108,9 +104,133 @@ const DocumentEditor = () => {
       description: `Your document has been downloaded as a ${format.toUpperCase()} file`,
     });
   };
+
+  const handleStyleClick = (style: string) => {
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = documentContent.substring(start, end);
+    let newText = '';
+    
+    switch (style) {
+      case 'bold':
+        newText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        newText = `*${selectedText}*`;
+        break;
+      case 'underline':
+        newText = `_${selectedText}_`;
+        break;
+      default:
+        newText = selectedText;
+    }
+    
+    const newContent = 
+      documentContent.substring(0, start) + 
+      newText + 
+      documentContent.substring(end);
+    
+    setDocumentContent(newContent);
+    
+    // Set focus back to textarea and restore selection
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + newText.length);
+    }, 0);
+    
+    toast({
+      title: `${style.charAt(0).toUpperCase() + style.slice(1)} applied`,
+      description: `Text formatted with ${style}`,
+    });
+  };
   
-  const toggleToolbar = () => {
-    setToolbarCollapsed(!toolbarCollapsed);
+  const handleAlignClick = (align: string) => {
+    toast({
+      title: `Text aligned ${align}`,
+      description: `Document alignment set to ${align}`,
+    });
+  };
+  
+  const handleListClick = (listType: string) => {
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = documentContent.substring(start, end);
+    const lines = selectedText.split('\n');
+    let newText = '';
+    
+    if (listType === 'bullet') {
+      newText = lines.map(line => `• ${line}`).join('\n');
+    } else if (listType === 'numbered') {
+      newText = lines.map((line, i) => `${i+1}. ${line}`).join('\n');
+    }
+    
+    const newContent = 
+      documentContent.substring(0, start) + 
+      newText + 
+      documentContent.substring(end);
+    
+    setDocumentContent(newContent);
+    
+    // Set focus back to textarea
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + newText.length);
+    }, 0);
+    
+    toast({
+      title: `${listType === 'bullet' ? 'Bullet' : 'Numbered'} list applied`,
+      description: `Added ${listType} list formatting`,
+    });
+  };
+  
+  const handleInsert = (type: string) => {
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    
+    let insertText = '';
+    
+    switch (type) {
+      case 'image':
+        insertText = '![Image description](image_url)';
+        break;
+      case 'table':
+        insertText = '\n| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n| Cell 1 | Cell 2 | Cell 3 |\n| Cell 4 | Cell 5 | Cell 6 |\n';
+        break;
+      case 'link':
+        insertText = '[Link text](https://example.com)';
+        break;
+      case 'checkbox':
+        insertText = '- [ ] Task to complete';
+        break;
+      default:
+        insertText = '';
+    }
+    
+    const newContent = 
+      documentContent.substring(0, start) + 
+      insertText + 
+      documentContent.substring(start);
+    
+    setDocumentContent(newContent);
+    
+    // Set focus back to textarea
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start, start + insertText.length);
+    }, 0);
+    
+    toast({
+      title: `${type.charAt(0).toUpperCase() + type.slice(1)} inserted`,
+      description: `Added ${type} to your document`,
+    });
   };
 
   return (
@@ -119,6 +239,7 @@ const DocumentEditor = () => {
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <AppLogo />
             <Button variant="ghost" size="icon" asChild>
               <Link to="/">
                 <ArrowLeft className="h-5 w-5" />
@@ -137,35 +258,6 @@ const DocumentEditor = () => {
             {isCollaborating && (
               <CollaboratorAvatars users={currentUsers.length > 0 ? currentUsers : sampleCollaborators} />
             )}
-            
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={toggleToolbar}>
-                <Plus className="h-5 w-5" />
-              </Button>
-            )}
-            
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            
-            <Button variant="outline" size="sm" onClick={handleShare}>
-              Share
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => downloadDocument("txt")}>Text (.txt)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadDocument("docx")}>Word (.docx)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadDocument("pdf")}>PDF (.pdf)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             
             <Sheet>
               <SheetTrigger asChild>
@@ -204,91 +296,27 @@ const DocumentEditor = () => {
         </div>
       </header>
 
-      {/* Toolbar */}
-      <div className={`border-b border-border bg-muted/30 ${toolbarCollapsed ? 'hidden' : 'block'}`}>
-        <div className="container py-2 flex flex-wrap items-center gap-2">
-          {/* Text formatting */}
-          <div className="flex items-center gap-1 mr-2">
-            <Button variant="ghost" size="sm">
-              <Bold className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Italic className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <Underline className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          {/* Text alignment */}
-          <div className="flex items-center gap-1 mr-2">
-            <Button variant="ghost" size="sm">
-              <AlignLeft className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <AlignCenter className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <AlignRight className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          {/* Lists */}
-          <div className="flex items-center gap-1 mr-2">
-            <Button variant="ghost" size="sm">
-              <List className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="sm">
-              <ListOrdered className="h-4 w-4" />
-            </Button>
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          {/* Font controls */}
-          <FontLibrary
-            onFontChange={handleFontChange}
-            onFontSizeChange={handleFontSizeChange}
-            currentFont={selectedFont}
-            currentSize={selectedFontSize}
-            isMobile={isMobile}
-          />
-          
-          <div className="ml-auto" />
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Create
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem asChild>
-                <Link to="/spreadsheet">
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Spreadsheet
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/presentation">
-                  <PresentationIcon className="h-4 w-4 mr-2" />
-                  Presentation
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
+      {/* Ribbon */}
+      <RibbonMenu 
+        editorType="document"
+        currentFont={selectedFont}
+        currentSize={selectedFontSize}
+        onFontChange={handleFontChange}
+        onFontSizeChange={handleFontSizeChange}
+        onStyleClick={handleStyleClick}
+        onAlignClick={handleAlignClick}
+        onListClick={handleListClick}
+        onSave={handleSave}
+        onShare={handleShare}
+        onDownload={downloadDocument}
+        onInsert={handleInsert}
+      />
 
       {/* Document editor */}
       <main className="flex-1 container py-6">
         <div className={`max-w-4xl mx-auto bg-card rounded-lg shadow-sm border p-8 min-h-[60vh] ${selectedFontSize}`} style={{ fontFamily: selectedFont }}>
           <Textarea
+            ref={editorRef}
             value={documentContent}
             onChange={(e) => setDocumentContent(e.target.value)}
             className="border-none resize-none w-full h-full min-h-[60vh] focus-visible:ring-0 p-0 text-card-foreground"
@@ -296,6 +324,9 @@ const DocumentEditor = () => {
           />
         </div>
       </main>
+
+      {/* Footer */}
+      <AppFooter />
     </div>
   );
 };

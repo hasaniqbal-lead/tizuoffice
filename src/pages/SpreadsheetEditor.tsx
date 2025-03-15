@@ -4,11 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { ArrowLeft, Download, Save, Settings, Plus, FileText, PresentationIcon } from "lucide-react";
+import { ArrowLeft, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useTheme } from "@/components/ThemeProvider";
+import { Moon, Sun } from "lucide-react";
+import { HighContrastToggle } from "@/components/HighContrastToggle";
+import { useCollaboration } from "@/components/CollaborationProvider";
+import { CollaboratorAvatars } from "@/components/CollaboratorAvatars";
+import { RibbonMenu } from "@/components/RibbonMenu";
+import { AppLogo } from "@/components/AppLogo";
+import { AppFooter } from "@/components/AppFooter";
 
 // Spreadsheet templates
 const templates = [
@@ -36,6 +43,13 @@ const templates = [
   })() }
 ];
 
+// Sample collaborators data
+const sampleCollaborators = [
+  { id: "user1", name: "John Doe", color: "#6366F1" },
+  { id: "user2", name: "Jane Smith", color: "#8B5CF6" },
+  { id: "user3", name: "Alex Johnson", color: "#EC4899" },
+];
+
 const SpreadsheetEditor = () => {
   const [spreadsheetTitle, setSpreadsheetTitle] = useState("Untitled Spreadsheet");
   const [activeTemplate, setActiveTemplate] = useState("blank");
@@ -44,6 +58,10 @@ const SpreadsheetEditor = () => {
   );
   const [formula, setFormula] = useState("");
   const [selectedCell, setSelectedCell] = useState<{row: number, col: number} | null>(null);
+  const [selectedFont, setSelectedFont] = useState("inter");
+  const [selectedFontSize, setSelectedFontSize] = useState("text-base");
+  const { shareDocument, currentUsers, isCollaborating } = useCollaboration();
+  const { isDarkMode, toggleDarkMode } = useTheme();
 
   const handleCellChange = (rowIndex: number, colIndex: number, value: string) => {
     const newCells = [...cells];
@@ -154,9 +172,27 @@ const SpreadsheetEditor = () => {
   };
 
   const handleSave = () => {
+    // In a real app, would save to backend
+    if (isCollaborating) {
+      // Update the shared document
+      shareDocument(spreadsheetTitle, JSON.stringify(cells));
+    }
+    
     toast({
       title: "Spreadsheet saved",
       description: "Your spreadsheet has been saved successfully",
+    });
+  };
+
+  const handleShare = () => {
+    const documentId = shareDocument(spreadsheetTitle, JSON.stringify(cells));
+    
+    // Copy sharing link to clipboard
+    navigator.clipboard.writeText(`${window.location.origin}/spreadsheet?id=${documentId}`);
+    
+    toast({
+      title: "Spreadsheet shared",
+      description: "Sharing link copied to clipboard",
     });
   };
 
@@ -184,15 +220,16 @@ const SpreadsheetEditor = () => {
         mimeType = "text/csv";
         fileExtension = ".csv";
         break;
-      case "xls":
+      case "xlsx":
         content = cells.map(row => row.join("\t")).join("\n");
-        mimeType = "application/vnd.ms-excel";
-        fileExtension = ".xls";
+        mimeType = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
+        fileExtension = ".xlsx";
         break;
-      case "json":
-        content = JSON.stringify(cells);
-        mimeType = "application/json";
-        fileExtension = ".json";
+      case "pdf":
+        // In a real app, would convert to PDF
+        content = cells.map(row => row.join("\t")).join("\n");
+        mimeType = "application/pdf";
+        fileExtension = ".pdf";
         break;
     }
     
@@ -210,12 +247,56 @@ const SpreadsheetEditor = () => {
     });
   };
 
+  const handleFontChange = (font: string) => {
+    setSelectedFont(font);
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    setSelectedFontSize(size);
+  };
+  
+  const handleStyleClick = (style: string) => {
+    toast({
+      title: `${style.charAt(0).toUpperCase() + style.slice(1)} formatting`,
+      description: "This feature is coming soon for spreadsheets",
+    });
+  };
+  
+  const handleAlignClick = (align: string) => {
+    toast({
+      title: `Text aligned ${align}`,
+      description: "This feature is coming soon for spreadsheets",
+    });
+  };
+  
+  const handleListClick = (listType: string) => {
+    toast({
+      title: `${listType === 'bullet' ? 'Bullet' : 'Numbered'} list`,
+      description: "This feature is not applicable for spreadsheets",
+    });
+  };
+  
+  const handleInsert = (type: string) => {
+    if (type === 'chart') {
+      toast({
+        title: "Chart feature",
+        description: "Chart insertion will be available soon",
+      });
+    } else {
+      toast({
+        title: `${type.charAt(0).toUpperCase() + type.slice(1)} inserted`,
+        description: `This feature is coming soon for spreadsheets`,
+      });
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <AppLogo />
             <Button variant="ghost" size="icon" asChild>
               <Link to="/">
                 <ArrowLeft className="h-5 w-5" />
@@ -231,24 +312,9 @@ const SpreadsheetEditor = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => downloadSpreadsheet("csv")}>CSV (.csv)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadSpreadsheet("xls")}>Excel (.xls)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadSpreadsheet("json")}>JSON (.json)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {isCollaborating && (
+              <CollaboratorAvatars users={currentUsers.length > 0 ? currentUsers : sampleCollaborators} />
+            )}
             
             <Sheet>
               <SheetTrigger asChild>
@@ -282,12 +348,44 @@ const SpreadsheetEditor = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Dark Mode</span>
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      <Switch
+                        checked={isDarkMode}
+                        onCheckedChange={toggleDarkMode}
+                        aria-label="Toggle dark mode"
+                      />
+                      <Moon className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>High Contrast</span>
+                    <HighContrastToggle />
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
           </div>
         </div>
       </header>
+
+      {/* Ribbon */}
+      <RibbonMenu 
+        editorType="spreadsheet"
+        currentFont={selectedFont}
+        currentSize={selectedFontSize}
+        onFontChange={handleFontChange}
+        onFontSizeChange={handleFontSizeChange}
+        onStyleClick={handleStyleClick}
+        onAlignClick={handleAlignClick}
+        onListClick={handleListClick}
+        onSave={handleSave}
+        onShare={handleShare}
+        onDownload={downloadSpreadsheet}
+        onInsert={handleInsert}
+      />
 
       {/* Formula Bar */}
       <div className="border-b border-border bg-muted/30">
@@ -304,29 +402,6 @@ const SpreadsheetEditor = () => {
               Apply
             </Button>
           </div>
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Create
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem asChild>
-                <Link to="/document">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Document
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/presentation">
-                  <PresentationIcon className="h-4 w-4 mr-2" />
-                  Presentation
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
         </div>
       </div>
 
@@ -367,6 +442,7 @@ const SpreadsheetEditor = () => {
                               : ""
                           }`}
                           data-formula={isFormulaCell ? displayValue : undefined}
+                          style={{ fontFamily: selectedFont }}
                         />
                       </TableCell>
                     );
@@ -377,6 +453,9 @@ const SpreadsheetEditor = () => {
           </Table>
         </div>
       </main>
+
+      {/* Footer */}
+      <AppFooter />
     </div>
   );
 };

@@ -1,21 +1,26 @@
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  ArrowLeft, Download, FileSpreadsheet, FileText, Plus, Save, Settings, 
-  Shapes, Circle, Square, Triangle, Trash, Bold, Italic, Underline, Type, 
-  AlignLeft, AlignCenter, AlignRight
+  ArrowLeft, Settings, Trash, Shapes, Circle, Square, Triangle
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useTheme } from "@/components/ThemeProvider";
+import { Moon, Sun } from "lucide-react";
+import { HighContrastToggle } from "@/components/HighContrastToggle";
+import { useCollaboration } from "@/components/CollaborationProvider";
+import { CollaboratorAvatars } from "@/components/CollaboratorAvatars";
+import { RibbonMenu } from "@/components/RibbonMenu";
+import { AppLogo } from "@/components/AppLogo";
+import { AppFooter } from "@/components/AppFooter";
 
 interface Slide {
   id: string;
@@ -58,27 +63,6 @@ const templates = [
   }
 ];
 
-// Font sizes
-const fontSizes = [
-  { id: "xs", name: "9", class: "text-xs" },
-  { id: "sm", name: "10", class: "text-sm" },
-  { id: "base", name: "12", class: "text-base" },
-  { id: "lg", name: "14", class: "text-lg" },
-  { id: "xl", name: "16", class: "text-xl" },
-  { id: "2xl", name: "18", class: "text-2xl" },
-  { id: "3xl", name: "24", class: "text-3xl" },
-  { id: "4xl", name: "36", class: "text-4xl" },
-];
-
-// Font families
-const fontFamilies = [
-  { id: "inter", name: "Inter", class: "inter" },
-  { id: "roboto", name: "Roboto", class: "roboto" },
-  { id: "lato", name: "Lato", class: "lato" },
-  { id: "montserrat", name: "Montserrat", class: "montserrat" },
-  { id: "merriweather", name: "Merriweather", class: "merriweather" },
-];
-
 // Font colors
 const fontColors = [
   { id: "default", name: "Default", class: "text-foreground" },
@@ -89,6 +73,13 @@ const fontColors = [
   { id: "warning", name: "Warning", class: "text-yellow-600" },
   { id: "error", name: "Error", class: "text-red-600" },
   { id: "info", name: "Info", class: "text-sky-600" },
+];
+
+// Sample collaborators data
+const sampleCollaborators = [
+  { id: "user1", name: "John Doe", color: "#6366F1" },
+  { id: "user2", name: "Jane Smith", color: "#8B5CF6" },
+  { id: "user3", name: "Alex Johnson", color: "#EC4899" },
 ];
 
 const PresentationEditor = () => {
@@ -106,9 +97,10 @@ const PresentationEditor = () => {
   ]);
   const [activeSlide, setActiveSlide] = useState("slide-1");
   const [activeTemplate, setActiveTemplate] = useState("blank");
-  const [toolbarCollapsed, setToolbarCollapsed] = useState(false);
-  
+  const editorRef = useRef<HTMLTextAreaElement>(null);
+  const { isDarkMode, toggleDarkMode } = useTheme();
   const isMobile = useIsMobile();
+  const { shareDocument, currentUsers, isCollaborating } = useCollaboration();
 
   const addSlide = () => {
     const newSlideId = `slide-${slides.length + 1}`;
@@ -201,9 +193,27 @@ const PresentationEditor = () => {
   };
 
   const handleSave = () => {
+    // In a real app, would save to backend
+    if (isCollaborating) {
+      // Update the shared document
+      shareDocument(presentationTitle, JSON.stringify(slides));
+    }
+    
     toast({
       title: "Presentation saved",
       description: "Your presentation has been saved successfully",
+    });
+  };
+
+  const handleShare = () => {
+    const documentId = shareDocument(presentationTitle, JSON.stringify(slides));
+    
+    // Copy sharing link to clipboard
+    navigator.clipboard.writeText(`${window.location.origin}/presentation?id=${documentId}`);
+    
+    toast({
+      title: "Presentation shared",
+      description: "Sharing link copied to clipboard",
     });
   };
 
@@ -227,13 +237,13 @@ const PresentationEditor = () => {
     let fileExtension = "";
     
     switch (format) {
-      case "ppt":
+      case "pptx":
         // In a real app, would generate actual PPT content
         content = slides.map(slide => 
           `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
         ).join("");
-        mimeType = "application/vnd.ms-powerpoint";
-        fileExtension = ".ppt";
+        mimeType = "application/vnd.openxmlformats-officedocument.presentationml.presentation";
+        fileExtension = ".pptx";
         break;
       case "pdf":
         // In a real app, would generate actual PDF content
@@ -272,9 +282,158 @@ const PresentationEditor = () => {
       description: `Your presentation has been downloaded as a ${format.toUpperCase()} file`,
     });
   };
+
+  const handleFontChange = (font: string) => {
+    updateSlideFontFamily(activeSlide, font);
+  };
+
+  const handleFontSizeChange = (size: string) => {
+    updateSlideFontSize(activeSlide, size);
+  };
   
-  const toggleToolbar = () => {
-    setToolbarCollapsed(!toolbarCollapsed);
+  const handleStyleClick = (style: string) => {
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selectedText = slides.find(s => s.id === activeSlide)?.content.substring(start, end) || '';
+    let newText = '';
+    
+    switch (style) {
+      case 'bold':
+        newText = `**${selectedText}**`;
+        break;
+      case 'italic':
+        newText = `*${selectedText}*`;
+        break;
+      case 'underline':
+        newText = `_${selectedText}_`;
+        break;
+      default:
+        newText = selectedText;
+    }
+    
+    const slide = slides.find(s => s.id === activeSlide);
+    if (slide) {
+      const newContent = 
+        slide.content.substring(0, start) + 
+        newText + 
+        slide.content.substring(end);
+      
+      updateSlideContent(activeSlide, newContent);
+      
+      // Set focus back to textarea
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.focus();
+          editorRef.current.setSelectionRange(start, start + newText.length);
+        }
+      }, 0);
+    }
+    
+    toast({
+      title: `${style.charAt(0).toUpperCase() + style.slice(1)} applied`,
+      description: `Text formatted with ${style}`,
+    });
+  };
+  
+  const handleAlignClick = (align: string) => {
+    toast({
+      title: `Text aligned ${align}`,
+      description: `Slide alignment set to ${align}`,
+    });
+  };
+  
+  const handleListClick = (listType: string) => {
+    if (!editorRef.current) return;
+    
+    const textarea = editorRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const slide = slides.find(s => s.id === activeSlide);
+    
+    if (!slide) return;
+    
+    const selectedText = slide.content.substring(start, end);
+    const lines = selectedText.split('\n');
+    let newText = '';
+    
+    if (listType === 'bullet') {
+      newText = lines.map(line => `• ${line}`).join('\n');
+    } else if (listType === 'numbered') {
+      newText = lines.map((line, i) => `${i+1}. ${line}`).join('\n');
+    }
+    
+    const newContent = 
+      slide.content.substring(0, start) + 
+      newText + 
+      slide.content.substring(end);
+    
+    updateSlideContent(activeSlide, newContent);
+    
+    // Set focus back to textarea
+    setTimeout(() => {
+      if (editorRef.current) {
+        editorRef.current.focus();
+        editorRef.current.setSelectionRange(start, start + newText.length);
+      }
+    }, 0);
+    
+    toast({
+      title: `${listType === 'bullet' ? 'Bullet' : 'Numbered'} list applied`,
+      description: `Added ${listType} list formatting`,
+    });
+  };
+  
+  const handleInsert = (type: string) => {
+    if (type === 'slide') {
+      addSlide();
+    } else if (type === 'image' || type === 'table' || type === 'link') {
+      if (!editorRef.current) return;
+      
+      const textarea = editorRef.current;
+      const start = textarea.selectionStart;
+      const slide = slides.find(s => s.id === activeSlide);
+      
+      if (!slide) return;
+      
+      let insertText = '';
+      
+      switch (type) {
+        case 'image':
+          insertText = '![Image description](image_url)';
+          break;
+        case 'table':
+          insertText = '\n| Header 1 | Header 2 | Header 3 |\n| --- | --- | --- |\n| Cell 1 | Cell 2 | Cell 3 |\n| Cell 4 | Cell 5 | Cell 6 |\n';
+          break;
+        case 'link':
+          insertText = '[Link text](https://example.com)';
+          break;
+        default:
+          insertText = '';
+      }
+      
+      const newContent = 
+        slide.content.substring(0, start) + 
+        insertText + 
+        slide.content.substring(start);
+      
+      updateSlideContent(activeSlide, newContent);
+      
+      // Set focus back to textarea
+      setTimeout(() => {
+        if (editorRef.current) {
+          editorRef.current.focus();
+          editorRef.current.setSelectionRange(start, start + insertText.length);
+        }
+      }, 0);
+      
+      toast({
+        title: `${type.charAt(0).toUpperCase() + type.slice(1)} inserted`,
+        description: `Added ${type} to your slide`,
+      });
+    }
   };
 
   return (
@@ -283,6 +442,7 @@ const PresentationEditor = () => {
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
+            <AppLogo />
             <Button variant="ghost" size="icon" asChild>
               <Link to="/">
                 <ArrowLeft className="h-5 w-5" />
@@ -298,31 +458,9 @@ const PresentationEditor = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            {isMobile && (
-              <Button variant="ghost" size="icon" onClick={toggleToolbar}>
-                <Plus className="h-5 w-5" />
-              </Button>
+            {isCollaborating && (
+              <CollaboratorAvatars users={currentUsers.length > 0 ? currentUsers : sampleCollaborators} />
             )}
-            
-            <Button variant="outline" size="sm" onClick={handleSave}>
-              <Save className="h-4 w-4 mr-2" />
-              Save
-            </Button>
-            
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Download
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => downloadPresentation("txt")}>Text (.txt)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadPresentation("ppt")}>PowerPoint (.ppt)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadPresentation("pdf")}>PDF (.pdf)</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => downloadPresentation("jpg")}>JPEG Slides (.jpg)</DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
             
             <Sheet>
               <SheetTrigger asChild>
@@ -356,6 +494,43 @@ const PresentationEditor = () => {
                       </SelectContent>
                     </Select>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span>Dark Mode</span>
+                    <div className="flex items-center gap-2">
+                      <Sun className="h-4 w-4" />
+                      <Switch
+                        checked={isDarkMode}
+                        onCheckedChange={toggleDarkMode}
+                        aria-label="Toggle dark mode"
+                      />
+                      <Moon className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span>High Contrast</span>
+                    <HighContrastToggle />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">Text Color</h3>
+                    <Select 
+                      value={slides.find(s => s.id === activeSlide)?.fontColor || "text-foreground"}
+                      onValueChange={(val) => updateSlideFontColor(activeSlide, val)}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select color" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {fontColors.map(color => (
+                          <SelectItem key={color.id} value={color.class}>
+                            <div className="flex items-center">
+                              <div className={`w-3 h-3 rounded-full mr-2 ${color.class === 'text-foreground' ? 'bg-foreground' : color.class.replace('text-', 'bg-')}`}></div>
+                              {color.name}
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
               </SheetContent>
             </Sheet>
@@ -363,176 +538,53 @@ const PresentationEditor = () => {
         </div>
       </header>
 
-      {/* Toolbar */}
-      <div className={`border-b border-border bg-muted/30 ${toolbarCollapsed ? 'hidden' : 'block'}`}>
-        <div className="container py-2 flex flex-wrap items-center gap-2">
-          {/* Text formatting */}
-          <div className="flex items-center gap-1 mr-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Bold className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Bold</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Italic className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Italic</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <Underline className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Underline</TooltipContent>
-            </Tooltip>
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          {/* Text alignment */}
-          <div className="flex items-center gap-1 mr-2">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <AlignLeft className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align left</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <AlignCenter className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align center</TooltipContent>
-            </Tooltip>
-            
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button variant="ghost" size="sm">
-                  <AlignRight className="h-4 w-4" />
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent>Align right</TooltipContent>
-            </Tooltip>
-          </div>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          {/* Font family */}
-          <Select 
-            value={slides.find(s => s.id === activeSlide)?.fontFamily || "inter"}
-            onValueChange={(val) => updateSlideFontFamily(activeSlide, val)}
-          >
-            <SelectTrigger className="w-[120px] h-8">
-              <SelectValue placeholder="Font" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontFamilies.map(font => (
-                <SelectItem key={font.id} value={font.class}>
-                  {font.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Font size */}
-          <Select 
-            value={slides.find(s => s.id === activeSlide)?.fontSize || "text-base"}
-            onValueChange={(val) => updateSlideFontSize(activeSlide, val)}
-          >
-            <SelectTrigger className="w-[80px] h-8">
-              <SelectValue placeholder="Size" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontSizes.map(size => (
-                <SelectItem key={size.id} value={size.class}>
-                  {size.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          {/* Font color */}
-          <Select 
-            value={slides.find(s => s.id === activeSlide)?.fontColor || "text-foreground"}
-            onValueChange={(val) => updateSlideFontColor(activeSlide, val)}
-          >
-            <SelectTrigger className="w-[120px] h-8">
-              <SelectValue placeholder="Color" />
-            </SelectTrigger>
-            <SelectContent>
-              {fontColors.map(color => (
-                <SelectItem key={color.id} value={color.class}>
-                  <div className="flex items-center">
-                    <div className={`w-3 h-3 rounded-full mr-2 ${color.class === 'text-foreground' ? 'bg-foreground' : color.class.replace('text-', 'bg-')}`}></div>
-                    {color.name}
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Shapes className="h-4 w-4 mr-1" />
-                Shapes
+      {/* Ribbon */}
+      <RibbonMenu 
+        editorType="presentation"
+        currentFont={slides.find(s => s.id === activeSlide)?.fontFamily || "inter"}
+        currentSize={slides.find(s => s.id === activeSlide)?.fontSize || "text-base"}
+        onFontChange={handleFontChange}
+        onFontSizeChange={handleFontSizeChange}
+        onStyleClick={handleStyleClick}
+        onAlignClick={handleAlignClick}
+        onListClick={handleListClick}
+        onSave={handleSave}
+        onShare={handleShare}
+        onDownload={downloadPresentation}
+        onInsert={handleInsert}
+      />
+
+      {/* Shape buttons (specific to presentation) */}
+      <div className="border-b border-border bg-muted/30">
+        <div className="container py-2 flex items-center gap-2">
+          <span className="text-sm font-medium">Shapes:</span>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addShape(activeSlide, "square")}>
+                <Square className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem onClick={() => addShape(activeSlide, "square")}>
-                <Square className="h-4 w-4 mr-2" />
-                Square
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addShape(activeSlide, "circle")}>
-                <Circle className="h-4 w-4 mr-2" />
-                Circle
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => addShape(activeSlide, "triangle")}>
-                <Triangle className="h-4 w-4 mr-2" />
-                Triangle
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          
-          <div className="h-6 w-px bg-border mx-2 hidden md:block" />
-          
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <Plus className="h-4 w-4 mr-1" />
-                Create
+            </TooltipTrigger>
+            <TooltipContent>Add Square</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addShape(activeSlide, "circle")}>
+                <Circle className="h-4 w-4" />
               </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent>
-              <DropdownMenuItem asChild>
-                <Link to="/document">
-                  <FileText className="h-4 w-4 mr-2" />
-                  Document
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <Link to="/spreadsheet">
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Spreadsheet
-                </Link>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+            </TooltipTrigger>
+            <TooltipContent>Add Circle</TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button variant="outline" size="sm" onClick={() => addShape(activeSlide, "triangle")}>
+                <Triangle className="h-4 w-4" />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Add Triangle</TooltipContent>
+          </Tooltip>
+          <Button variant="outline" size="sm" onClick={addSlide}>
+            Add Slide
+          </Button>
         </div>
       </div>
 
@@ -543,7 +595,7 @@ const PresentationEditor = () => {
           <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
             <h3 className="font-medium">Slides</h3>
             <Button size="sm" variant="ghost" onClick={addSlide}>
-              <Plus className="h-4 w-4" />
+              Add
             </Button>
           </div>
           <div className="p-2 space-y-2 max-h-[calc(100vh-200px)] overflow-y-auto">
@@ -599,6 +651,7 @@ const PresentationEditor = () => {
                       <div>
                         <label className="text-sm font-medium mb-1 block">Slide Content</label>
                         <Textarea
+                          ref={editorRef}
                           value={slide.content}
                           onChange={(e) => updateSlideContent(slide.id, e.target.value)}
                           className={`min-h-[250px] text-base ${slide.fontSize} ${slide.fontColor}`}
@@ -644,6 +697,9 @@ const PresentationEditor = () => {
           </Tabs>
         </div>
       </main>
+
+      {/* Footer */}
+      <AppFooter />
     </div>
   );
 };
