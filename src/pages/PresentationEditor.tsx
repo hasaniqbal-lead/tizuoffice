@@ -1,3 +1,4 @@
+
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -647,12 +648,68 @@ const PresentationEditor = () => {
                       <div className="p-8 flex items-center justify-center min-h-[400px]">
                         <div className="max-w-2xl w-full bg-white shadow-lg rounded-lg p-10 border">
                           <h2 className="text-2xl font-bold mb-6">{slide.title}</h2>
-                          <p 
+                          <div 
                             className={`whitespace-pre-line ${slide.fontSize} ${slide.fontColor}`}
                             style={{ fontFamily: slide.fontFamily }}
                           >
                             {slide.content}
-                          </p>
+                          </div>
                           
-                          {
+                          {slide.shapes.map((shape, index) => {
+                            let shapeElement = null;
+                            
+                            switch (shape.type) {
+                              case 'square':
+                                shapeElement = <div key={index} className="w-20 h-20 bg-primary/20 border border-primary/30" />;
+                                break;
+                              case 'circle':
+                                shapeElement = <div key={index} className="w-20 h-20 rounded-full bg-primary/20 border border-primary/30" />;
+                                break;
+                              case 'triangle':
+                                shapeElement = (
+                                  <div 
+                                    key={index} 
+                                    className="w-0 h-0 border-l-[40px] border-r-[40px] border-b-[80px] border-l-transparent border-r-transparent border-b-primary/20"
+                                  />
+                                );
+                                break;
+                              default:
+                                shapeElement = null;
+                            }
+                            
+                            return (
+                              <div 
+                                key={`shape-container-${index}`}
+                                className="mt-4 inline-block mr-4"
+                                style={{
+                                  position: 'relative',
+                                  left: `${shape.position.x}px`,
+                                  top: `${shape.position.y}px`
+                                }}
+                              >
+                                {shapeElement}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </TabsContent>
+                  </div>
+                );
+              }
+              return null;
+            })}
+          </Tabs>
+        </div>
+      </main>
+      
+      <footer className="border-t border-border mt-auto">
+        <div className="container py-4">
+          <AppFooter />
+        </div>
+      </footer>
+    </div>
+  );
+};
 
+export default PresentationEditor;
