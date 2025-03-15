@@ -1,10 +1,10 @@
-
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { 
   ArrowLeft, Settings, Trash, Shapes, Circle, Square, Triangle
 } from "lucide-react";
@@ -32,7 +32,6 @@ interface Slide {
   shapes: Array<{ type: string; position: { x: number; y: number } }>;
 }
 
-// Presentation templates
 const templates = [
   { 
     id: "blank", 
@@ -63,7 +62,6 @@ const templates = [
   }
 ];
 
-// Font colors
 const fontColors = [
   { id: "default", name: "Default", class: "text-foreground" },
   { id: "primary", name: "Primary", class: "text-primary" },
@@ -75,7 +73,6 @@ const fontColors = [
   { id: "info", name: "Info", class: "text-sky-600" },
 ];
 
-// Sample collaborators data
 const sampleCollaborators = [
   { id: "user1", name: "John Doe", color: "#6366F1" },
   { id: "user2", name: "Jane Smith", color: "#8B5CF6" },
@@ -130,7 +127,6 @@ const PresentationEditor = () => {
     const newSlides = slides.filter(slide => slide.id !== id);
     setSlides(newSlides);
     
-    // Set active slide to first one if the active slide was removed
     if (id === activeSlide) {
       setActiveSlide(newSlides[0].id);
     }
@@ -179,7 +175,6 @@ const PresentationEditor = () => {
         : slide
     ));
     
-    // Also add a shape marker to the content
     const slideIndex = slides.findIndex(slide => slide.id === id);
     if (slideIndex !== -1) {
       const shapeText = shapeType === "square" ? "□ " : shapeType === "circle" ? "○ " : "△ ";
@@ -193,9 +188,7 @@ const PresentationEditor = () => {
   };
 
   const handleSave = () => {
-    // In a real app, would save to backend
     if (isCollaborating) {
-      // Update the shared document
       shareDocument(presentationTitle, JSON.stringify(slides));
     }
     
@@ -208,7 +201,6 @@ const PresentationEditor = () => {
   const handleShare = () => {
     const documentId = shareDocument(presentationTitle, JSON.stringify(slides));
     
-    // Copy sharing link to clipboard
     navigator.clipboard.writeText(`${window.location.origin}/presentation?id=${documentId}`);
     
     toast({
@@ -238,7 +230,6 @@ const PresentationEditor = () => {
     
     switch (format) {
       case "pptx":
-        // In a real app, would generate actual PPT content
         content = slides.map(slide => 
           `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
         ).join("");
@@ -246,7 +237,6 @@ const PresentationEditor = () => {
         fileExtension = ".pptx";
         break;
       case "pdf":
-        // In a real app, would generate actual PDF content
         content = slides.map(slide => 
           `# ${slide.title}\n\n${slide.content}\n\n---\n\n`
         ).join("");
@@ -254,7 +244,6 @@ const PresentationEditor = () => {
         fileExtension = ".pdf";
         break;
       case "jpg":
-        // For demo purposes, just notify that this would normally generate images
         toast({
           title: "Feature coming soon",
           description: "JPG export will be available in the next update",
@@ -323,7 +312,6 @@ const PresentationEditor = () => {
       
       updateSlideContent(activeSlide, newContent);
       
-      // Set focus back to textarea
       setTimeout(() => {
         if (editorRef.current) {
           editorRef.current.focus();
@@ -372,7 +360,6 @@ const PresentationEditor = () => {
     
     updateSlideContent(activeSlide, newContent);
     
-    // Set focus back to textarea
     setTimeout(() => {
       if (editorRef.current) {
         editorRef.current.focus();
@@ -421,7 +408,6 @@ const PresentationEditor = () => {
       
       updateSlideContent(activeSlide, newContent);
       
-      // Set focus back to textarea
       setTimeout(() => {
         if (editorRef.current) {
           editorRef.current.focus();
@@ -438,7 +424,6 @@ const PresentationEditor = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -538,7 +523,6 @@ const PresentationEditor = () => {
         </div>
       </header>
 
-      {/* Ribbon */}
       <RibbonMenu 
         editorType="presentation"
         currentFont={slides.find(s => s.id === activeSlide)?.fontFamily || "inter"}
@@ -554,7 +538,6 @@ const PresentationEditor = () => {
         onInsert={handleInsert}
       />
 
-      {/* Shape buttons (specific to presentation) */}
       <div className="border-b border-border bg-muted/30">
         <div className="container py-2 flex items-center gap-2">
           <span className="text-sm font-medium">Shapes:</span>
@@ -588,9 +571,7 @@ const PresentationEditor = () => {
         </div>
       </div>
 
-      {/* Presentation editor */}
       <main className="flex-1 container py-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-        {/* Slides list */}
         <div className="col-span-1 border rounded-md overflow-hidden">
           <div className="p-4 border-b bg-muted/30 flex justify-between items-center">
             <h3 className="font-medium">Slides</h3>
@@ -625,7 +606,6 @@ const PresentationEditor = () => {
           </div>
         </div>
 
-        {/* Active slide editor */}
         <div className="col-span-3 border rounded-md overflow-hidden">
           <Tabs defaultValue="edit" className="w-full">
             <div className="border-b px-4">
@@ -674,34 +654,5 @@ const PresentationEditor = () => {
                             {slide.content}
                           </p>
                           
-                          {/* We would render actual shapes here with proper positioning in a real app */}
-                          {slide.shapes.length > 0 && (
-                            <div className="mt-4">
-                              <div className="flex gap-2 flex-wrap">
-                                {slide.shapes.map((shape, idx) => (
-                                  <div key={idx} className="inline-block text-xl">
-                                    {shape.type === "square" ? "□" : shape.type === "circle" ? "○" : "△"}
-                                  </div>
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </div>
-                );
-              }
-              return null;
-            })}
-          </Tabs>
-        </div>
-      </main>
+                          {
 
-      {/* Footer */}
-      <AppFooter />
-    </div>
-  );
-};
-
-export default PresentationEditor;

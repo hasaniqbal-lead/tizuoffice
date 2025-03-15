@@ -1,9 +1,9 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
@@ -17,7 +17,6 @@ import { RibbonMenu } from "@/components/RibbonMenu";
 import { AppLogo } from "@/components/AppLogo";
 import { AppFooter } from "@/components/AppFooter";
 
-// Spreadsheet templates
 const templates = [
   { id: "blank", name: "Blank Spreadsheet", cells: Array(10).fill(null).map(() => Array(10).fill("")) },
   { id: "budget", name: "Budget Template", cells: (() => {
@@ -43,7 +42,6 @@ const templates = [
   })() }
 ];
 
-// Sample collaborators data
 const sampleCollaborators = [
   { id: "user1", name: "John Doe", color: "#6366F1" },
   { id: "user2", name: "Jane Smith", color: "#8B5CF6" },
@@ -68,10 +66,8 @@ const SpreadsheetEditor = () => {
     newCells[rowIndex][colIndex] = value;
     setCells(newCells);
     
-    // Set as selected cell
     setSelectedCell({row: rowIndex, col: colIndex});
     
-    // If value starts with =, it might be a formula
     if (value.startsWith("=")) {
       setFormula(value);
     }
@@ -84,13 +80,11 @@ const SpreadsheetEditor = () => {
 
   const evaluateFormula = (formula: string, cells: string[][]) => {
     try {
-      // Handle simple SUM formula: =SUM(A1:A3)
       if (formula.startsWith("=SUM(") && formula.endsWith(")")) {
         const range = formula.substring(5, formula.length - 1);
         const [start, end] = range.split(":");
         
-        // Convert A1 notation to row/col indices
-        const startCol = start.charCodeAt(0) - 65; // A=0, B=1, etc.
+        const startCol = start.charCodeAt(0) - 65;
         const startRow = parseInt(start.substring(1)) - 1;
         const endCol = end.charCodeAt(0) - 65;
         const endRow = parseInt(end.substring(1)) - 1;
@@ -107,12 +101,10 @@ const SpreadsheetEditor = () => {
         return sum.toString();
       }
       
-      // Handle AVERAGE formula: =AVERAGE(A1:A3)
       if (formula.startsWith("=AVERAGE(") && formula.endsWith(")")) {
         const range = formula.substring(9, formula.length - 1);
         const [start, end] = range.split(":");
         
-        // Convert A1 notation to row/col indices
         const startCol = start.charCodeAt(0) - 65;
         const startRow = parseInt(start.substring(1)) - 1;
         const endCol = end.charCodeAt(0) - 65;
@@ -132,9 +124,7 @@ const SpreadsheetEditor = () => {
         return count > 0 ? (sum / count).toString() : "0";
       }
       
-      // Handle simple math expressions: =A1+B1
       if (formula.startsWith("=")) {
-        // Replace cell references with values
         let expression = formula.substring(1);
         const cellRegex = /[A-Z]\d+/g;
         const cellRefs = expression.match(cellRegex) || [];
@@ -146,8 +136,6 @@ const SpreadsheetEditor = () => {
           expression = expression.replace(cellRef, cellValue || "0");
         }
         
-        // Safely evaluate the expression
-        // eslint-disable-next-line no-eval
         return eval(expression).toString();
       }
       
@@ -172,9 +160,7 @@ const SpreadsheetEditor = () => {
   };
 
   const handleSave = () => {
-    // In a real app, would save to backend
     if (isCollaborating) {
-      // Update the shared document
       shareDocument(spreadsheetTitle, JSON.stringify(cells));
     }
     
@@ -187,7 +173,6 @@ const SpreadsheetEditor = () => {
   const handleShare = () => {
     const documentId = shareDocument(spreadsheetTitle, JSON.stringify(cells));
     
-    // Copy sharing link to clipboard
     navigator.clipboard.writeText(`${window.location.origin}/spreadsheet?id=${documentId}`);
     
     toast({
@@ -226,7 +211,6 @@ const SpreadsheetEditor = () => {
         fileExtension = ".xlsx";
         break;
       case "pdf":
-        // In a real app, would convert to PDF
         content = cells.map(row => row.join("\t")).join("\n");
         mimeType = "application/pdf";
         fileExtension = ".pdf";
@@ -292,7 +276,6 @@ const SpreadsheetEditor = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      {/* Header */}
       <header className="border-b border-border">
         <div className="container py-3 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -371,7 +354,6 @@ const SpreadsheetEditor = () => {
         </div>
       </header>
 
-      {/* Ribbon */}
       <RibbonMenu 
         editorType="spreadsheet"
         currentFont={selectedFont}
@@ -387,7 +369,6 @@ const SpreadsheetEditor = () => {
         onInsert={handleInsert}
       />
 
-      {/* Formula Bar */}
       <div className="border-b border-border bg-muted/30">
         <div className="container py-2 flex items-center gap-2">
           <div className="flex-1 flex items-center gap-2">
@@ -405,7 +386,6 @@ const SpreadsheetEditor = () => {
         </div>
       </div>
 
-      {/* Spreadsheet */}
       <main className="flex-1 container py-6 overflow-auto">
         <div className="border rounded-md">
           <Table>
@@ -454,7 +434,6 @@ const SpreadsheetEditor = () => {
         </div>
       </main>
 
-      {/* Footer */}
       <AppFooter />
     </div>
   );
