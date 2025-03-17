@@ -38,50 +38,52 @@ export function NoteCanvas({
       let newText = '';
       
       // Handle alignment styles
-      if (activeStyle.startsWith('align-')) {
+      if (activeStyle && activeStyle.startsWith('align-')) {
         const alignment = activeStyle.replace('align-', '');
         setTextAlignment(alignment);
         return;
       }
       
-      switch (activeStyle) {
-        case 'bold':
-          newText = `**${selectedText}**`;
-          break;
-        case 'italic':
-          newText = `*${selectedText}*`;
-          break;
-        case 'underline':
-          newText = `_${selectedText}_`;
-          break;
-        case 'heading1':
-          newText = `\n# ${selectedText}\n`;
-          break;
-        case 'heading2':
-          newText = `\n## ${selectedText}\n`;
-          break;
-        case 'bullet':
-          newText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
-          break;
-        case 'numbered':
-          newText = selectedText.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n');
-          break;
-        default:
-          newText = selectedText;
+      if (activeStyle) {
+        switch (activeStyle) {
+          case 'bold':
+            newText = `**${selectedText}**`;
+            break;
+          case 'italic':
+            newText = `*${selectedText}*`;
+            break;
+          case 'underline':
+            newText = `_${selectedText}_`;
+            break;
+          case 'heading1':
+            newText = `\n# ${selectedText}\n`;
+            break;
+          case 'heading2':
+            newText = `\n## ${selectedText}\n`;
+            break;
+          case 'bullet':
+            newText = selectedText.split('\n').map(line => `• ${line}`).join('\n');
+            break;
+          case 'numbered':
+            newText = selectedText.split('\n').map((line, i) => `${i + 1}. ${line}`).join('\n');
+            break;
+          default:
+            newText = selectedText;
+        }
+        
+        const newContent = 
+          content.substring(0, start) + 
+          newText + 
+          content.substring(end);
+        
+        onChange(newContent);
+        
+        // Set selection after formatting
+        setTimeout(() => {
+          textarea.focus();
+          textarea.setSelectionRange(start, start + newText.length);
+        }, 0);
       }
-      
-      const newContent = 
-        content.substring(0, start) + 
-        newText + 
-        content.substring(end);
-      
-      onChange(newContent);
-      
-      // Set selection after formatting
-      setTimeout(() => {
-        textarea.focus();
-        textarea.setSelectionRange(start, start + newText.length);
-      }, 0);
     }
   }, [activeStyle, content, onChange]);
 
