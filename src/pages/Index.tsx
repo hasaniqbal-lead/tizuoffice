@@ -29,7 +29,7 @@ const Index = () => {
           <Link to="/document" className="block">
             <Card className="hover:shadow-lg transition-shadow cursor-pointer h-full">
               <CardHeader>
-                <CardTitle>Document</CardTitle>
+                <CardTitle>Notes.</CardTitle>
                 <CardDescription>Create and edit text documents</CardDescription>
               </CardHeader>
               <CardContent className="flex items-center justify-center py-8">
