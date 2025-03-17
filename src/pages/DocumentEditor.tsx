@@ -16,6 +16,7 @@ const DocumentEditor = () => {
   const [selectedFontSize, setSelectedFontSize] = useState("text-base");
   const [activeStyle, setActiveStyle] = useState<string | undefined>();
   const [pageSize, setPageSize] = useState("a4");
+  const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const { shareDocument, isCollaborating } = useCollaboration();
   
   const handleFontChange = (font: string) => {
@@ -136,6 +137,15 @@ const DocumentEditor = () => {
     });
   };
 
+  const handleOrientationChange = (newOrientation: "portrait" | "landscape") => {
+    setOrientation(newOrientation);
+    
+    toast({
+      title: "Page orientation changed",
+      description: `Document orientation set to ${newOrientation}`,
+    });
+  };
+
   return (
     <div className="document-page bg-background">
       <header className="border-b border-border document-header">
@@ -152,6 +162,8 @@ const DocumentEditor = () => {
         currentSize={selectedFontSize}
         onStyleClick={handleStyleClick}
         onInsert={handleInsert}
+        orientation={orientation}
+        onOrientationChange={handleOrientationChange}
       />
 
       <div className="document-main">
@@ -168,6 +180,7 @@ const DocumentEditor = () => {
             fontFamily={selectedFont}
             fontSize={selectedFontSize}
             activeStyle={activeStyle}
+            orientation={orientation}
           />
         </div>
         

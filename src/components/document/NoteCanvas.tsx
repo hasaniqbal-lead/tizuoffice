@@ -8,6 +8,7 @@ interface NoteCanvasProps {
   fontFamily: string;
   fontSize: string;
   activeStyle?: string;
+  orientation?: "portrait" | "landscape";
 }
 
 export function NoteCanvas({ 
@@ -15,7 +16,8 @@ export function NoteCanvas({
   onChange, 
   fontFamily, 
   fontSize,
-  activeStyle
+  activeStyle,
+  orientation = "portrait"
 }: NoteCanvasProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [wordCount, setWordCount] = useState(0);
@@ -100,7 +102,7 @@ export function NoteCanvas({
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-4">
-        <div className="mx-auto bg-white rounded-md shadow-sm border p-4 min-h-[calc(100vh-220px)] a4-page">
+        <div className={`mx-auto bg-white rounded-md shadow-sm border p-4 min-h-[calc(100vh-220px)] ${orientation === "landscape" ? "landscape-page" : "a4-page"}`}>
           <Textarea
             ref={textareaRef}
             value={content}
