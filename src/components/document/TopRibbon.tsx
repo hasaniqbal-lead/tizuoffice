@@ -12,7 +12,11 @@ import {
   List, 
   Table2, 
   SplitSquareVertical, 
-  TextCursorInput
+  TextCursorInput,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify
 } from "lucide-react";
 import { FontLibrary } from "@/components/FontLibrary";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -58,6 +62,38 @@ export function TopRibbon({
     onInsert("pageBreak");
   };
 
+  const handleTextFormat = (format: string) => {
+    toast({
+      title: `${format.charAt(0).toUpperCase() + format.slice(1)} formatting applied`,
+      description: `${format.charAt(0).toUpperCase() + format.slice(1)} formatting has been applied to the selected text`
+    });
+    onStyleClick(format);
+  };
+
+  const handleInsertTable = () => {
+    toast({
+      title: "Table Inserted",
+      description: "A table has been inserted at the cursor position"
+    });
+    onInsert("table");
+  };
+
+  const handleAlignment = (alignment: string) => {
+    toast({
+      title: `Text ${alignment} aligned`,
+      description: `Text has been ${alignment} aligned`
+    });
+    onStyleClick(`align-${alignment}`);
+  };
+
+  const handleListClick = (listType: string) => {
+    toast({
+      title: `${listType === 'bullet' ? 'Bullet' : 'Numbered'} List Applied`,
+      description: `A ${listType === 'bullet' ? 'bullet' : 'numbered'} list has been created`
+    });
+    onStyleClick(listType);
+  };
+
   return (
     <div className="w-full bg-background border-b border-border p-2 flex items-center gap-3 overflow-x-auto">
       <div className="flex items-center gap-2">
@@ -79,7 +115,7 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onStyleClick("bold")}
+              onClick={() => handleTextFormat("bold")}
             >
               <Bold className="h-4 w-4" />
             </Button>
@@ -93,7 +129,7 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onStyleClick("italic")}
+              onClick={() => handleTextFormat("italic")}
             >
               <Italic className="h-4 w-4" />
             </Button>
@@ -107,7 +143,7 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onStyleClick("underline")}
+              onClick={() => handleTextFormat("underline")}
             >
               <Underline className="h-4 w-4" />
             </Button>
@@ -157,7 +193,67 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onStyleClick("bullet")}
+              onClick={() => handleAlignment("left")}
+            >
+              <AlignLeft className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Align Left</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => handleAlignment("center")}
+            >
+              <AlignCenter className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Align Center</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => handleAlignment("right")}
+            >
+              <AlignRight className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Align Right</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => handleAlignment("justify")}
+            >
+              <AlignJustify className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Justify</TooltipContent>
+        </Tooltip>
+      </div>
+
+      <Separator orientation="vertical" className="h-8" />
+
+      <div className="flex items-center gap-1">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={() => handleListClick("bullet")}
             >
               <List className="h-4 w-4" />
             </Button>
@@ -171,7 +267,7 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onStyleClick("numbered")}
+              onClick={() => handleListClick("numbered")}
             >
               <ListOrdered className="h-4 w-4" />
             </Button>
@@ -189,7 +285,7 @@ export function TopRibbon({
               variant="ghost" 
               size="icon" 
               className="h-8 w-8" 
-              onClick={() => onInsert("table")}
+              onClick={handleInsertTable}
             >
               <Table2 className="h-4 w-4" />
             </Button>

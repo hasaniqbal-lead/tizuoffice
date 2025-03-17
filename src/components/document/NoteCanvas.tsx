@@ -19,6 +19,7 @@ export function NoteCanvas({
 }: NoteCanvasProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [wordCount, setWordCount] = useState(0);
+  const [textAlignment, setTextAlignment] = useState("left");
   
   useEffect(() => {
     // Calculate word count
@@ -33,6 +34,13 @@ export function NoteCanvas({
       const end = textarea.selectionEnd;
       const selectedText = content.substring(start, end) || 'New text';
       let newText = '';
+      
+      // Handle alignment styles
+      if (activeStyle.startsWith('align-')) {
+        const alignment = activeStyle.replace('align-', '');
+        setTextAlignment(alignment);
+        return;
+      }
       
       switch (activeStyle) {
         case 'bold':
@@ -75,6 +83,20 @@ export function NoteCanvas({
     }
   }, [activeStyle, content, onChange]);
 
+  // Apply text alignment to the text area
+  const getTextAlignment = () => {
+    switch (textAlignment) {
+      case 'center':
+        return 'text-center';
+      case 'right':
+        return 'text-right';
+      case 'justify':
+        return 'text-justify';
+      default:
+        return 'text-left';
+    }
+  };
+
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-4">
@@ -83,7 +105,7 @@ export function NoteCanvas({
             ref={textareaRef}
             value={content}
             onChange={(e) => onChange(e.target.value)}
-            className={`border-none resize-none w-full h-full min-h-[calc(100vh-240px)] focus-visible:ring-0 p-0 ${fontSize}`}
+            className={`border-none resize-none w-full h-full min-h-[calc(100vh-240px)] focus-visible:ring-0 p-0 ${fontSize} ${getTextAlignment()}`}
             style={{ fontFamily }}
             placeholder="Start typing your note here..."
           />

@@ -20,10 +20,23 @@ const DocumentEditor = () => {
   
   const handleFontChange = (font: string) => {
     setSelectedFont(font);
+    toast({
+      title: "Font changed",
+      description: `Font changed to ${font}`,
+    });
   };
 
   const handleFontSizeChange = (size: string) => {
     setSelectedFontSize(size);
+    // Find the numeric size for the toast
+    const numericSize = size.includes("text-[") 
+      ? size.match(/\d+/)?.[0]
+      : size.replace("text-", "");
+    
+    toast({
+      title: "Font size changed",
+      description: `Font size changed to ${numericSize}`,
+    });
   };
 
   const handleSave = () => {
@@ -87,6 +100,20 @@ const DocumentEditor = () => {
       toast({
         title: "Page break inserted",
         description: "A page break has been added to your document",
+      });
+    } else if (type === "image") {
+      setDocumentContent(prev => prev + "\n\n[Image Placeholder]\n\n");
+      
+      toast({
+        title: "Image placeholder inserted",
+        description: "An image placeholder has been added to your document",
+      });
+    } else if (type === "checkbox") {
+      setDocumentContent(prev => prev + "\n- [ ] New task\n");
+      
+      toast({
+        title: "Checkbox inserted",
+        description: "A checkbox has been added to your document",
       });
     }
   };

@@ -1,11 +1,13 @@
+
 import { useState, useEffect } from "react";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Comprehensive Google Fonts collection (popular options)
+// Comprehensive collection of open-source Google Fonts
 export const fonts = [{
   value: "inter",
   label: "Inter",
@@ -45,6 +47,18 @@ export const fonts = [{
 }, {
   value: "ubuntu",
   label: "Ubuntu",
+  category: "sans-serif"
+}, {
+  value: "nunito",
+  label: "Nunito",
+  category: "sans-serif"
+}, {
+  value: "work-sans",
+  label: "Work Sans",
+  category: "sans-serif"
+}, {
+  value: "rubik",
+  label: "Rubik",
   category: "sans-serif"
 }, {
   value: "playfair-display",
@@ -107,30 +121,56 @@ export const fonts = [{
   label: "Space Mono",
   category: "monospace"
 }];
+
+// Specific font size options with numeric values
 export const fontSizes = [{
   value: "text-xs",
-  label: "Extra Small"
+  label: "8",
+  numeric: 8
 }, {
   value: "text-sm",
-  label: "Small"
+  label: "9",
+  numeric: 9
+}, {
+  value: "text-[11px]",
+  label: "10",
+  numeric: 10
+}, {
+  value: "text-[12px]",
+  label: "11",
+  numeric: 11
 }, {
   value: "text-base",
-  label: "Medium"
+  label: "12",
+  numeric: 12
+}, {
+  value: "text-[14px]",
+  label: "13",
+  numeric: 13
 }, {
   value: "text-lg",
-  label: "Large"
+  label: "14",
+  numeric: 14
+}, {
+  value: "text-[16px]",
+  label: "15",
+  numeric: 15
 }, {
   value: "text-xl",
-  label: "Extra Large"
+  label: "16",
+  numeric: 16
 }, {
   value: "text-2xl",
-  label: "2XL"
+  label: "18",
+  numeric: 18
 }, {
   value: "text-3xl",
-  label: "3XL"
+  label: "20",
+  numeric: 20
 }, {
   value: "text-4xl",
-  label: "4XL"
+  label: "24",
+  numeric: 24
 }];
 
 // Available color themes
@@ -153,6 +193,7 @@ export const themes = [{
   value: "red",
   label: "Red"
 }];
+
 export type FontLibraryProps = {
   onFontChange: (font: string) => void;
   onFontSizeChange: (size: string) => void;
@@ -160,6 +201,7 @@ export type FontLibraryProps = {
   currentSize?: string;
   isMobile?: boolean;
 };
+
 export function FontLibrary({
   onFontChange,
   onFontSizeChange,
@@ -172,6 +214,10 @@ export function FontLibrary({
   const [value, setValue] = useState(currentFont);
   const [size, setSize] = useState(currentSize);
   const [filter, setFilter] = useState<string | null>(null);
+
+  // Find the current font size numeric value
+  const currentSizeObj = fontSizes.find(fs => fs.value === size);
+  const currentNumericSize = currentSizeObj?.numeric || 12;
 
   // Load Google Fonts dynamically
   useEffect(() => {
@@ -196,39 +242,101 @@ export function FontLibrary({
       document.head.removeChild(link);
     };
   }, []);
+
   const handleFontChange = (currentValue: string) => {
     setValue(currentValue);
     setFontOpen(false);
     onFontChange(currentValue);
   };
+
   const handleSizeChange = (currentValue: string) => {
     setSize(currentValue);
     setSizeOpen(false);
     onFontSizeChange(currentValue);
   };
+
+  const increaseFontSize = () => {
+    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
+    if (currentIndex < fontSizes.length - 1) {
+      const newSize = fontSizes[currentIndex + 1].value;
+      setSize(newSize);
+      onFontSizeChange(newSize);
+    }
+  };
+
+  const decreaseFontSize = () => {
+    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
+    if (currentIndex > 0) {
+      const newSize = fontSizes[currentIndex - 1].value;
+      setSize(newSize);
+      onFontSizeChange(newSize);
+    }
+  };
+
   const handleFilterChange = (category: string) => {
     setFilter(category === filter ? null : category);
   };
+
   const filteredFonts = filter ? fonts.filter(font => font.category === filter) : fonts;
   const selectedFont = fonts.find(font => font.value === value);
   const selectedSize = fontSizes.find(fontSize => fontSize.value === size);
-  return <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-2`}>
-      {!isMobile && <div className="flex gap-1">
-          
-          
-          
-          
-          <Button variant="ghost" size="sm" onClick={() => handleFilterChange("monospace")} className={filter === "monospace" ? "bg-secondary" : ""}>
+
+  return (
+    <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-2`}>
+      {!isMobile && (
+        <div className="flex gap-1">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleFilterChange("sans-serif")} 
+            className={filter === "sans-serif" ? "bg-secondary" : ""}
+          >
+            Sans
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleFilterChange("serif")} 
+            className={filter === "serif" ? "bg-secondary" : ""}
+          >
+            Serif
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleFilterChange("display")} 
+            className={filter === "display" ? "bg-secondary" : ""}
+          >
+            Display
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleFilterChange("handwriting")} 
+            className={filter === "handwriting" ? "bg-secondary" : ""}
+          >
+            Script
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => handleFilterChange("monospace")} 
+            className={filter === "monospace" ? "bg-secondary" : ""}
+          >
             Mono
           </Button>
-        </div>}
+        </div>
+      )}
 
       <Popover open={fontOpen} onOpenChange={setFontOpen}>
         <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={fontOpen} className={`${isMobile ? 'w-full' : 'min-w-[160px]'} justify-between h-8`}>
-            <span style={{
-            fontFamily: value
-          }}>
+          <Button 
+            variant="outline" 
+            role="combobox" 
+            aria-expanded={fontOpen} 
+            className={`${isMobile ? 'w-full' : 'min-w-[160px]'} justify-between h-8`}
+          >
+            <span style={{ fontFamily: value }}>
               {selectedFont?.label || "Select font..."}
             </span>
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -239,53 +347,125 @@ export function FontLibrary({
             <CommandInput placeholder="Search font..." />
             <CommandEmpty>No font found.</CommandEmpty>
             <CommandGroup heading="Categories" className={isMobile ? 'flex flex-wrap gap-1 p-2' : 'hidden'}>
-              <Button variant="outline" size="sm" onClick={() => handleFilterChange("sans-serif")} className={`text-xs ${filter === "sans-serif" ? "bg-secondary" : ""}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleFilterChange("sans-serif")} 
+                className={`text-xs ${filter === "sans-serif" ? "bg-secondary" : ""}`}
+              >
                 Sans
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleFilterChange("serif")} className={`text-xs ${filter === "serif" ? "bg-secondary" : ""}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleFilterChange("serif")} 
+                className={`text-xs ${filter === "serif" ? "bg-secondary" : ""}`}
+              >
                 Serif
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleFilterChange("display")} className={`text-xs ${filter === "display" ? "bg-secondary" : ""}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleFilterChange("display")} 
+                className={`text-xs ${filter === "display" ? "bg-secondary" : ""}`}
+              >
                 Display
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleFilterChange("handwriting")} className={`text-xs ${filter === "handwriting" ? "bg-secondary" : ""}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleFilterChange("handwriting")} 
+                className={`text-xs ${filter === "handwriting" ? "bg-secondary" : ""}`}
+              >
                 Script
               </Button>
-              <Button variant="outline" size="sm" onClick={() => handleFilterChange("monospace")} className={`text-xs ${filter === "monospace" ? "bg-secondary" : ""}`}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => handleFilterChange("monospace")} 
+                className={`text-xs ${filter === "monospace" ? "bg-secondary" : ""}`}
+              >
                 Mono
               </Button>
             </CommandGroup>
             <CommandGroup className="max-h-[300px] overflow-auto">
-              {filteredFonts.map(font => <CommandItem key={font.value} value={font.value} onSelect={handleFontChange}>
-                  <Check className={cn("mr-2 h-4 w-4", value === font.value ? "opacity-100" : "opacity-0")} />
-                  <span style={{
-                fontFamily: font.value
-              }}>{font.label}</span>
-                </CommandItem>)}
+              {filteredFonts.map(font => (
+                <CommandItem key={font.value} value={font.value} onSelect={handleFontChange}>
+                  <Check 
+                    className={cn("mr-2 h-4 w-4", value === font.value ? "opacity-100" : "opacity-0")} 
+                  />
+                  <span style={{ fontFamily: font.value }}>{font.label}</span>
+                </CommandItem>
+              ))}
             </CommandGroup>
           </Command>
         </PopoverContent>
       </Popover>
 
-      <Popover open={sizeOpen} onOpenChange={setSizeOpen}>
-        <PopoverTrigger asChild>
-          <Button variant="outline" role="combobox" aria-expanded={sizeOpen} className={`${isMobile ? 'w-full' : 'w-[130px]'} justify-between h-8`}>
-            {selectedSize?.label || "Size..."}
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
-          <Command>
-            <CommandInput placeholder="Search size..." />
-            <CommandEmpty>No size found.</CommandEmpty>
-            <CommandGroup>
-              {fontSizes.map(fontSize => <CommandItem key={fontSize.value} value={fontSize.value} onSelect={handleSizeChange}>
-                  <Check className={cn("mr-2 h-4 w-4", size === fontSize.value ? "opacity-100" : "opacity-0")} />
-                  <span className={fontSize.value}>{fontSize.label}</span>
-                </CommandItem>)}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
-    </div>;
+      <div className="flex items-center">
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={decreaseFontSize}
+              disabled={fontSizes.findIndex(fs => fs.value === size) === 0}
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Decrease Font Size</TooltipContent>
+        </Tooltip>
+
+        <Popover open={sizeOpen} onOpenChange={setSizeOpen}>
+          <PopoverTrigger asChild>
+            <Button 
+              variant="outline" 
+              role="combobox" 
+              aria-expanded={sizeOpen} 
+              className="px-2 h-8 min-w-[50px] justify-center"
+            >
+              {currentNumericSize}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[120px] p-0">
+            <Command>
+              <CommandInput placeholder="Size..." />
+              <CommandEmpty>No size found.</CommandEmpty>
+              <CommandGroup>
+                {fontSizes.map(fontSize => (
+                  <CommandItem 
+                    key={fontSize.value} 
+                    value={fontSize.value} 
+                    onSelect={handleSizeChange}
+                  >
+                    <Check 
+                      className={cn("mr-2 h-4 w-4", size === fontSize.value ? "opacity-100" : "opacity-0")} 
+                    />
+                    <span className={fontSize.value}>{fontSize.label}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-8 w-8" 
+              onClick={increaseFontSize}
+              disabled={fontSizes.findIndex(fs => fs.value === size) === fontSizes.length - 1}
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Increase Font Size</TooltipContent>
+        </Tooltip>
+      </div>
+    </div>
+  );
 }
