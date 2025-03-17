@@ -7,7 +7,7 @@ import {
   PlusSquare, 
   Printer, 
   FileHeart, 
-  WaterDroplet,
+  Droplet,
   Scan,
   AlignEndHorizontal
 } from "lucide-react";
@@ -144,7 +144,7 @@ export function LeftSidebar({ onAddPage, pageSize, onChangePageSize }: LeftSideb
         <Tooltip>
           <TooltipTrigger asChild>
             <Button variant="outline" size="sm" className="h-16 flex flex-col items-center justify-center w-full gap-1" onClick={handleAddWatermark}>
-              <WaterDroplet className="h-5 w-5" />
+              <Droplet className="h-5 w-5" />
               <span className="text-xs">Watermark</span>
             </Button>
           </TooltipTrigger>
