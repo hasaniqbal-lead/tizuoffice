@@ -107,6 +107,37 @@
   }
 }
 
+/* A4 paper sizes */
+.a4-page {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.letter-page {
+  width: 216mm;
+  min-height: 279mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.1);
+  position: relative;
+}
+
+.legal-page {
+  width: 216mm;
+  min-height: 356mm;
+  padding: 20mm;
+  margin: 0 auto;
+  background-color: white;
+  box-shadow: 0 0 0.5cm rgba(0,0,0,0.1);
+  position: relative;
+}
+
 /* Define reusable classes for the unified ribbon */
 .ribbon-container {
   @apply border-b border-border bg-muted/30;
@@ -148,4 +179,39 @@
 
 .dark .app-logo.dark {
   @apply inline-block;
+}
+
+/* Document styles */
+.document-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-main {
+  display: flex;
+  flex: 1;
+  height: calc(100vh - 120px);
+  overflow: hidden;
+}
+
+.document-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+@media print {
+  .a4-page, .letter-page, .legal-page {
+    box-shadow: none;
+    margin: 0;
+    width: 100%;
+  }
+  
+  .document-header, .left-sidebar, .right-sidebar, .top-ribbon, .app-footer {
+    display: none !important;
+  }
+  
+  .document-content {
+    overflow: visible;
+  }
 }
