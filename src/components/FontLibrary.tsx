@@ -1,23 +1,17 @@
-
 import { useState, useEffect } from "react";
-import { Check, ChevronDown, Minus, Plus } from "lucide-react";
+import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Simplified font selection - just two fonts
+// Single default font - Calibri
 export const fonts = [
   {
-    value: "arial",
-    label: "Arial",
+    value: "calibri",
+    label: "Calibri",
     category: "sans-serif"
-  },
-  {
-    value: "times-new-roman",
-    label: "Times New Roman",
-    category: "serif"
   }
 ];
 
@@ -94,31 +88,18 @@ export const themes = [{
 }];
 
 export type FontLibraryProps = {
-  onFontChange: (font: string) => void;
   onFontSizeChange: (size: string) => void;
-  currentFont?: string;
   currentSize?: string;
   isMobile?: boolean;
 };
 
 export function FontLibrary({
-  onFontChange,
   onFontSizeChange,
-  currentFont = "arial",
   currentSize = "text-base",
   isMobile = false
 }: FontLibraryProps) {
-  const [fontOpen, setFontOpen] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
-  const [value, setValue] = useState(currentFont);
   const [size, setSize] = useState(currentSize);
-
-  const handleFontChange = (currentValue: string) => {
-    if (!currentValue) return;
-    setValue(currentValue);
-    setFontOpen(false);
-    onFontChange(currentValue);
-  };
 
   const handleSizeChange = (currentValue: string) => {
     if (!currentValue) return;
@@ -127,7 +108,7 @@ export function FontLibrary({
     onFontSizeChange(currentValue);
   };
 
-  // Define the missing decreaseFontSize function
+  // Define the decreaseFontSize function
   const decreaseFontSize = () => {
     const currentIndex = fontSizes.findIndex(fs => fs.value === size);
     if (currentIndex > 0) {
@@ -137,7 +118,7 @@ export function FontLibrary({
     }
   };
 
-  // Define the missing increaseFontSize function
+  // Define the increaseFontSize function
   const increaseFontSize = () => {
     const currentIndex = fontSizes.findIndex(fs => fs.value === size);
     if (currentIndex < fontSizes.length - 1) {
@@ -150,47 +131,9 @@ export function FontLibrary({
   // Find the current font size numeric value
   const currentSizeObj = fontSizes.find(fs => fs.value === size);
   const currentNumericSize = currentSizeObj?.numeric || 12;
-  const selectedFont = fonts.find(font => font.value === value);
 
   return (
     <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-2`}>
-      <Popover open={fontOpen} onOpenChange={setFontOpen}>
-        <PopoverTrigger asChild>
-          <Button 
-            variant="outline" 
-            role="combobox" 
-            aria-expanded={fontOpen} 
-            className={`${isMobile ? 'w-full' : 'min-w-[160px]'} justify-between h-8`}
-          >
-            <span style={{ fontFamily: value }}>
-              {selectedFont?.label || "Arial"}
-            </span>
-            <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
-          <Command>
-            <CommandGroup>
-              {fonts.map(font => (
-                <CommandItem
-                  key={font.value}
-                  value={font.value}
-                  onSelect={handleFontChange}
-                >
-                  <Check
-                    className={cn(
-                      "mr-2 h-4 w-4",
-                      value === font.value ? "opacity-100" : "opacity-0"
-                    )}
-                  />
-                  <span style={{ fontFamily: font.value }}>{font.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </Command>
-        </PopoverContent>
-      </Popover>
-
       <div className="flex items-center">
         <Tooltip>
           <TooltipTrigger asChild>
@@ -229,9 +172,6 @@ export function FontLibrary({
                     value={fontSize.value} 
                     onSelect={handleSizeChange}
                   >
-                    <Check 
-                      className={cn("mr-2 h-4 w-4", size === fontSize.value ? "opacity-100" : "opacity-0")} 
-                    />
                     <span className={fontSize.value}>{fontSize.label}</span>
                   </CommandItem>
                 ))}

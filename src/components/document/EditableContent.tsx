@@ -22,7 +22,7 @@ export function EditableContent({
       suppressContentEditableWarning={true}
       className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-4 whitespace-pre-wrap ${fontSize} ${fontStyles}`}
       style={{ 
-        fontFamily: fontFamily || 'Arial, sans-serif',
+        fontFamily: 'Calibri, sans-serif', // Fixed to Calibri
         writingMode: 'horizontal-tb',
         direction: 'ltr',
         unicodeBidi: 'bidi-override', // This ensures strong directional override

@@ -12,21 +12,12 @@ import { useCollaboration } from "@/components/CollaborationProvider";
 const DocumentEditor = () => {
   const [documentTitle, setDocumentTitle] = useState("Untitled Note");
   const [documentContent, setDocumentContent] = useState("");
-  const [selectedFont, setSelectedFont] = useState("inter");
   const [selectedFontSize, setSelectedFontSize] = useState("text-base");
   const [activeStyle, setActiveStyle] = useState<string | undefined>();
   const [pageSize, setPageSize] = useState("a4");
   const [orientation, setOrientation] = useState<"portrait" | "landscape">("portrait");
   const { shareDocument, isCollaborating } = useCollaboration();
   
-  const handleFontChange = (font: string) => {
-    setSelectedFont(font);
-    toast({
-      title: "Font changed",
-      description: `Font changed to ${font}`,
-    });
-  };
-
   const handleFontSizeChange = (size: string) => {
     setSelectedFontSize(size);
     // Find the numeric size for the toast
@@ -156,9 +147,7 @@ const DocumentEditor = () => {
       </header>
 
       <TopRibbon 
-        onFontChange={handleFontChange}
         onFontSizeChange={handleFontSizeChange}
-        currentFont={selectedFont}
         currentSize={selectedFontSize}
         onStyleClick={handleStyleClick}
         onInsert={handleInsert}
@@ -177,7 +166,7 @@ const DocumentEditor = () => {
           <NoteCanvas 
             content={documentContent}
             onChange={setDocumentContent}
-            fontFamily={selectedFont}
+            fontFamily="calibri"
             fontSize={selectedFontSize}
             activeStyle={activeStyle}
             orientation={orientation}

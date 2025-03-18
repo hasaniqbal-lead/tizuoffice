@@ -64,7 +64,7 @@ export function NoteCanvas({
             content={content}
             onChange={onChange}
             fontSize={fontSize}
-            fontFamily={fontFamily}
+            fontFamily="calibri"
             textAlignment={getTextAlignment()}
             fontStyles={getFontStyles()}
           />

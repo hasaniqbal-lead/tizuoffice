@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -11,42 +10,33 @@ import {
   ListOrdered, 
   List, 
   Table2, 
-  SplitSquareVertical, 
-  TextCursorInput,
+  SplitSquareVertical,
   AlignLeft,
   AlignCenter,
   AlignRight,
   AlignJustify,
   Smartphone,
-  Tablet
+  Tablet,
+  Plus,
+  Minus
 } from "lucide-react";
 import { 
   Tooltip, 
   TooltipContent, 
   TooltipTrigger 
 } from "@/components/ui/tooltip";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { 
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { fonts, fontSizes } from "@/components/FontLibrary";
-import { Check, ChevronDown, Minus, Plus } from "lucide-react";
+import { fontSizes } from "@/components/FontLibrary";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 
 interface TopRibbonProps {
-  onFontChange: (font: string) => void;
   onFontSizeChange: (size: string) => void;
-  currentFont: string;
   currentSize: string;
   onStyleClick: (style: string) => void;
   onInsert: (type: string) => void;
@@ -55,16 +45,13 @@ interface TopRibbonProps {
 }
 
 export function TopRibbon({
-  onFontChange,
   onFontSizeChange,
-  currentFont,
   currentSize,
   onStyleClick,
   onInsert,
   orientation,
   onOrientationChange
 }: TopRibbonProps) {
-  const [fontOpen, setFontOpen] = useState(false);
   const [sizeOpen, setSizeOpen] = useState(false);
 
   // Find the current font size numeric value
@@ -111,54 +98,14 @@ export function TopRibbon({
     }
   };
 
-  const handleFontChange = (currentValue: string) => {
-    setFontOpen(false);
-    onFontChange(currentValue);
-  };
-
   const handleSizeChange = (currentValue: string) => {
     setSizeOpen(false);
     onFontSizeChange(currentValue);
   };
 
-  const selectedFont = fonts.find(font => font.value === currentFont);
-
   return (
     <div className="w-full bg-background border-b border-border p-2 flex items-center gap-3 overflow-x-auto">
       <div className="flex items-center gap-2">
-        {/* Font Family Dropdown */}
-        <Popover open={fontOpen} onOpenChange={setFontOpen}>
-          <PopoverTrigger asChild>
-            <Button 
-              variant="outline" 
-              role="combobox" 
-              aria-expanded={fontOpen} 
-              className="min-w-[160px] justify-between h-8"
-            >
-              <span style={{ fontFamily: currentFont }}>
-                {selectedFont?.label || "Select font..."}
-              </span>
-              <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[240px] p-0">
-            <Command>
-              <CommandInput placeholder="Search font..." />
-              <CommandEmpty>No font found.</CommandEmpty>
-              <CommandGroup className="max-h-[300px] overflow-auto">
-                {fonts.map(font => (
-                  <CommandItem key={font.value} value={font.value} onSelect={handleFontChange}>
-                    <Check 
-                      className={cn("mr-2 h-4 w-4", currentFont === font.value ? "opacity-100" : "opacity-0")} 
-                    />
-                    <span style={{ fontFamily: font.value }}>{font.label}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
-
         {/* Font Size Controls */}
         <div className="flex items-center">
           <Tooltip>
@@ -198,9 +145,6 @@ export function TopRibbon({
                       value={fontSize.value} 
                       onSelect={handleSizeChange}
                     >
-                      <Check 
-                        className={cn("mr-2 h-4 w-4", currentSize === fontSize.value ? "opacity-100" : "opacity-0")} 
-                      />
                       <span>{fontSize.label}</span>
                     </CommandItem>
                   ))}
