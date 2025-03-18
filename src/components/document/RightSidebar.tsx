@@ -7,7 +7,9 @@ import {
   Printer, 
   Camera,
   Search,
-  FileSymlink
+  FileSymlink,
+  FileSpreadsheet,
+  PresentationIcon
 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
@@ -38,6 +40,13 @@ export function RightSidebar({ onSave, onShare, onPrint }: RightSidebarProps) {
     toast({
       title: "Export Options",
       description: "Export options dialog opened"
+    });
+  };
+
+  const handleFeatureComingSoon = (feature: string) => {
+    toast({
+      title: "Coming Soon",
+      description: `${feature} feature will be available soon`
     });
   };
 
@@ -106,6 +115,26 @@ export function RightSidebar({ onSave, onShare, onPrint }: RightSidebarProps) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>Export document</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" className="h-16 flex flex-col items-center justify-center w-full gap-1" onClick={() => handleFeatureComingSoon("Spreadsheet")} disabled>
+              <FileSpreadsheet className="h-5 w-5" />
+              <span className="text-xs">Spreadsheet</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Coming soon</TooltipContent>
+        </Tooltip>
+
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button variant="outline" size="sm" className="h-16 flex flex-col items-center justify-center w-full gap-1" onClick={() => handleFeatureComingSoon("Presentation")} disabled>
+              <PresentationIcon className="h-5 w-5" />
+              <span className="text-xs">Presentation</span>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>Coming soon</TooltipContent>
         </Tooltip>
       </div>
     </div>
