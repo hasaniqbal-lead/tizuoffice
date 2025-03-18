@@ -19,12 +19,16 @@ export function EditableContent({
   return (
     <div 
       contentEditable="true"
-      className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-0 ${fontSize} ${textAlignment} ${fontStyles}`}
-      style={{ fontFamily }}
+      className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-4 ${fontSize} ${textAlignment} ${fontStyles}`}
+      style={{ 
+        fontFamily: `"${fontFamily}", sans-serif`,
+        direction: 'ltr'  // Explicitly set left-to-right text direction
+      }}
       onInput={(e) => {
         const target = e.target as HTMLDivElement;
-        onChange(target.innerText);
+        onChange(target.innerHTML); // Using innerHTML instead of innerText to preserve formatting
       }}
+      suppressContentEditableWarning={true}
       dangerouslySetInnerHTML={{ __html: content }}
     />
   );

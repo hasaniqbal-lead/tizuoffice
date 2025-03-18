@@ -2,58 +2,61 @@
 import { useState, useEffect } from 'react';
 
 export function useTextStyling(activeStyle?: string) {
-  const [textAlignment, setTextAlignment] = useState("left");
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderlined, setIsUnderlined] = useState(false);
+  const [textAlignment, setTextAlignment] = useState("text-left");
+  const [fontStyles, setFontStyles] = useState<string[]>([]);
 
   useEffect(() => {
     if (activeStyle) {
       // Handle alignment styles
       if (activeStyle.startsWith('align-')) {
         const alignment = activeStyle.replace('align-', '');
-        setTextAlignment(alignment);
+        switch (alignment) {
+          case 'left':
+            setTextAlignment('text-left');
+            break;
+          case 'center':
+            setTextAlignment('text-center');
+            break;
+          case 'right':
+            setTextAlignment('text-right');
+            break;
+          case 'justify':
+            setTextAlignment('text-justify');
+            break;
+        }
         return;
       }
-      
+
       // Handle text formatting
       switch (activeStyle) {
         case 'bold':
-          document.execCommand('bold', false);
-          setIsBold(!isBold);
+          setFontStyles(prev => 
+            prev.includes('font-bold') 
+              ? prev.filter(style => style !== 'font-bold')
+              : [...prev, 'font-bold']
+          );
           break;
         case 'italic':
-          document.execCommand('italic', false);
-          setIsItalic(!isItalic);
+          setFontStyles(prev => 
+            prev.includes('italic') 
+              ? prev.filter(style => style !== 'italic')
+              : [...prev, 'italic']
+          );
           break;
         case 'underline':
-          document.execCommand('underline', false);
-          setIsUnderlined(!isUnderlined);
+          setFontStyles(prev => 
+            prev.includes('underline') 
+              ? prev.filter(style => style !== 'underline')
+              : [...prev, 'underline']
+          );
           break;
       }
     }
-  }, [activeStyle, isBold, isItalic, isUnderlined]);
+  }, [activeStyle]);
 
-  const getTextAlignment = () => {
-    switch (textAlignment) {
-      case 'center':
-        return 'text-center';
-      case 'right':
-        return 'text-right';
-      case 'justify':
-        return 'text-justify';
-      default:
-        return 'text-left';
-    }
-  };
-
-  const getFontStyles = () => {
-    const styles = [];
-    if (isBold) styles.push('font-bold');
-    if (isItalic) styles.push('italic');
-    if (isUnderlined) styles.push('underline');
-    return styles.join(' ');
-  };
+  const getTextAlignment = () => textAlignment;
+  
+  const getFontStyles = () => fontStyles.join(' ');
 
   return {
     getTextAlignment,

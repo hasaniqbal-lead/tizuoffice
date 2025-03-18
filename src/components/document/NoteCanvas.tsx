@@ -23,7 +23,6 @@ export function NoteCanvas({
   activeStyle,
   orientation = "portrait"
 }: NoteCanvasProps) {
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [wordCount, setWordCount] = useState(0);
   const { getTextAlignment, getFontStyles } = useTextStyling(activeStyle);
   const { handleList } = useListHandling(content, onChange);
@@ -35,50 +34,31 @@ export function NoteCanvas({
   }, [content]);
 
   useEffect(() => {
-    if (textareaRef.current && activeStyle) {
-      const textarea = textareaRef.current;
-      const start = textarea.selectionStart;
-      const end = textarea.selectionEnd;
-      
+    const contentDiv = document.querySelector('[contenteditable="true"]') as HTMLDivElement;
+    if (contentDiv && activeStyle) {
       // Handle headings and lists
       switch (activeStyle) {
         case 'heading1': {
-          const headingText = content.substring(start, end) || 'Heading 1';
-          const newContent = content.substring(0, start) + 
-                           `\n\n${headingText}\n\n` + 
-                           content.substring(end);
-          onChange(newContent);
+          document.execCommand('formatBlock', false, 'h1');
           break;
         }
         case 'heading2': {
-          const headingText = content.substring(start, end) || 'Heading 2';
-          const newContent = content.substring(0, start) + 
-                           `\n\n${headingText}\n\n` + 
-                           content.substring(end);
-          onChange(newContent);
+          document.execCommand('formatBlock', false, 'h2');
           break;
         }
         case 'bullet':
         case 'numbered': {
-          const newPosition = handleList(
-            activeStyle as 'bullet' | 'numbered',
-            start,
-            end
-          );
-          setTimeout(() => {
-            textarea.focus();
-            textarea.setSelectionRange(newPosition, newPosition);
-          }, 0);
+          handleList(activeStyle, 0, 0);
           break;
         }
       }
     }
-  }, [activeStyle, content, onChange, handleList]);
+  }, [activeStyle, handleList]);
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-4">
-        <div className={`mx-auto bg-white rounded-md shadow-sm border p-4 min-h-[calc(100vh-220px)] ${orientation === "landscape" ? "landscape-page" : "a4-page"}`}>
+        <div className={`mx-auto bg-white rounded-md shadow-sm border ${orientation === "landscape" ? "landscape-page" : "a4-page"}`}>
           <PrintStyles orientation={orientation} />
           <EditableContent
             content={content}
