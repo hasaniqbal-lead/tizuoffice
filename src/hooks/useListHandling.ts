@@ -3,29 +3,36 @@ import { useCallback } from 'react';
 
 export function useListHandling(content: string, onChange: (content: string) => void) {
   const handleList = useCallback((type: 'bullet' | 'numbered', start: number, end: number) => {
-    if (start === end) {
-      // If no text is selected, insert a point at cursor
-      const prefix = type === 'bullet' ? '• ' : '1. ';
-      const newContent = content.substring(0, start) + 
-                        prefix + 
-                        content.substring(end);
-      onChange(newContent);
-      return start + prefix.length;
-    } else {
-      // If text is selected, format each line
-      const selectedText = content.substring(start, end);
-      const lines = selectedText.split('\n');
-      const formattedList = lines.map((line, i) => 
-        type === 'bullet' ? `• ${line}` : `${i + 1}. ${line}`
-      ).join('\n');
+    const selection = window.getSelection();
+    if (!selection) return;
+
+    const range = selection.getRangeAt(0);
+    const parentElement = range.commonAncestorContainer as HTMLElement;
+    
+    if (parentElement) {
+      const list = document.createElement(type === 'bullet' ? 'ul' : 'ol');
+      const listItem = document.createElement('li');
       
-      const newContent = content.substring(0, start) + 
-                        formattedList + 
-                        content.substring(end);
-      onChange(newContent);
-      return start + formattedList.length;
+      if (selection.toString().trim() === '') {
+        // If no text is selected, create a new list item
+        listItem.innerHTML = '&nbsp;'; // Add a space to make the item visible
+        list.appendChild(listItem);
+        range.insertNode(list);
+      } else {
+        // If text is selected, wrap it in a list item
+        listItem.textContent = selection.toString();
+        list.appendChild(listItem);
+        range.deleteContents();
+        range.insertNode(list);
+      }
+      
+      // Update the content
+      const target = parentElement.closest('[contenteditable="true"]');
+      if (target) {
+        onChange(target.innerHTML);
+      }
     }
-  }, [content, onChange]);
+  }, [onChange]);
 
   return { handleList };
 }

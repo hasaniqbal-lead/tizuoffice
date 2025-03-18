@@ -18,31 +18,19 @@ export function useTextStyling(activeStyle?: string) {
     // Handle text formatting
     switch (activeStyle) {
       case 'bold':
-        setFontStyles(prev => 
-          prev.includes('font-bold') 
-            ? prev.filter(style => style !== 'font-bold')
-            : [...prev, 'font-bold']
-        );
+        document.execCommand('bold', false);
         break;
       case 'italic':
-        setFontStyles(prev => 
-          prev.includes('italic') 
-            ? prev.filter(style => style !== 'italic')
-            : [...prev, 'italic']
-        );
+        document.execCommand('italic', false);
         break;
       case 'underline':
-        setFontStyles(prev => 
-          prev.includes('underline') 
-            ? prev.filter(style => style !== 'underline')
-            : [...prev, 'underline']
-        );
+        document.execCommand('underline', false);
         break;
       case 'heading1':
-        document.execCommand('formatBlock', false, 'h1');
+        document.execCommand('formatBlock', false, '<h1>');
         break;
       case 'heading2':
-        document.execCommand('formatBlock', false, 'h2');
+        document.execCommand('formatBlock', false, '<h2>');
         break;
     }
   }, [activeStyle]);

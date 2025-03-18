@@ -19,10 +19,13 @@ export function EditableContent({
   return (
     <div 
       contentEditable="true"
-      className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-4 ${fontSize} ${textAlignment} ${fontStyles}`}
+      suppressContentEditableWarning={true}
+      className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-4 whitespace-pre-wrap ${fontSize} ${fontStyles}`}
       style={{ 
-        fontFamily: fontFamily || 'sans-serif', // Ensure we always have a fallback
+        fontFamily: fontFamily || 'Arial, sans-serif',
+        writingMode: 'horizontal-tb',
         direction: 'ltr',
+        unicodeBidi: 'embed',
         textAlign: textAlignment === 'text-left' ? 'left' 
           : textAlignment === 'text-center' ? 'center'
           : textAlignment === 'text-right' ? 'right'
@@ -31,9 +34,9 @@ export function EditableContent({
       }}
       onInput={(e) => {
         const target = e.target as HTMLDivElement;
-        onChange(target.innerHTML || ''); // Ensure we never pass null/undefined
+        onChange(target.innerHTML);
       }}
-      dangerouslySetInnerHTML={{ __html: content || '' }} // Ensure we never render null/undefined
+      dangerouslySetInnerHTML={{ __html: content || '' }}
     />
   );
 }

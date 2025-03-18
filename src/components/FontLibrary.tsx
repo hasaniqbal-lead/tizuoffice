@@ -6,120 +6,19 @@ import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 
-// Comprehensive collection of open-source Google Fonts
-export const fonts = [{
-  value: "inter",
-  label: "Inter",
-  category: "sans-serif"
-}, {
-  value: "roboto",
-  label: "Roboto",
-  category: "sans-serif"
-}, {
-  value: "open-sans",
-  label: "Open Sans",
-  category: "sans-serif"
-}, {
-  value: "lato",
-  label: "Lato",
-  category: "sans-serif"
-}, {
-  value: "poppins",
-  label: "Poppins",
-  category: "sans-serif"
-}, {
-  value: "montserrat",
-  label: "Montserrat",
-  category: "sans-serif"
-}, {
-  value: "raleway",
-  label: "Raleway",
-  category: "sans-serif"
-}, {
-  value: "oswald",
-  label: "Oswald",
-  category: "sans-serif"
-}, {
-  value: "source-sans-pro",
-  label: "Source Sans Pro",
-  category: "sans-serif"
-}, {
-  value: "ubuntu",
-  label: "Ubuntu",
-  category: "sans-serif"
-}, {
-  value: "nunito",
-  label: "Nunito",
-  category: "sans-serif"
-}, {
-  value: "work-sans",
-  label: "Work Sans",
-  category: "sans-serif"
-}, {
-  value: "rubik",
-  label: "Rubik",
-  category: "sans-serif"
-}, {
-  value: "playfair-display",
-  label: "Playfair Display",
-  category: "serif"
-}, {
-  value: "merriweather",
-  label: "Merriweather",
-  category: "serif"
-}, {
-  value: "lora",
-  label: "Lora",
-  category: "serif"
-}, {
-  value: "pt-serif",
-  label: "PT Serif",
-  category: "serif"
-}, {
-  value: "roboto-slab",
-  label: "Roboto Slab",
-  category: "serif"
-}, {
-  value: "crimson-text",
-  label: "Crimson Text",
-  category: "serif"
-}, {
-  value: "archivo-black",
-  label: "Archivo Black",
-  category: "display"
-}, {
-  value: "bebas-neue",
-  label: "Bebas Neue",
-  category: "display"
-}, {
-  value: "comfortaa",
-  label: "Comfortaa",
-  category: "display"
-}, {
-  value: "pacifico",
-  label: "Pacifico",
-  category: "handwriting"
-}, {
-  value: "dancing-script",
-  label: "Dancing Script",
-  category: "handwriting"
-}, {
-  value: "caveat",
-  label: "Caveat",
-  category: "handwriting"
-}, {
-  value: "courier-prime",
-  label: "Courier Prime",
-  category: "monospace"
-}, {
-  value: "roboto-mono",
-  label: "Roboto Mono",
-  category: "monospace"
-}, {
-  value: "space-mono",
-  label: "Space Mono",
-  category: "monospace"
-}];
+// Simplified font selection - just two fonts
+export const fonts = [
+  {
+    value: "arial",
+    label: "Arial",
+    category: "sans-serif"
+  },
+  {
+    value: "times-new-roman",
+    label: "Times New Roman",
+    category: "serif"
+  }
+];
 
 // Specific font size options with numeric values
 export const fontSizes = [{
@@ -204,7 +103,7 @@ export type FontLibraryProps = {
 export function FontLibrary({
   onFontChange,
   onFontSizeChange,
-  currentFont = "inter",
+  currentFont = "arial",
   currentSize = "text-base",
   isMobile = false
 }: FontLibraryProps) {
@@ -212,123 +111,28 @@ export function FontLibrary({
   const [sizeOpen, setSizeOpen] = useState(false);
   const [value, setValue] = useState(currentFont);
   const [size, setSize] = useState(currentSize);
-  const [filter, setFilter] = useState<string | null>(null);
-
-  // Find the current font size numeric value
-  const currentSizeObj = fontSizes.find(fs => fs.value === size);
-  const currentNumericSize = currentSizeObj?.numeric || 12;
-
-  // Load Google Fonts dynamically
-  useEffect(() => {
-    const fontFamilies = fonts.map(font => {
-      if (font.category === "serif") {
-        return `family=${font.label.replace(/\s+/g, "+")}:wght@400;700`;
-      } else if (font.category === "monospace") {
-        return `family=${font.label.replace(/\s+/g, "+")}:wght@400;700`;
-      } else if (font.category === "handwriting") {
-        return `family=${font.label.replace(/\s+/g, "+")}:wght@400;700`;
-      } else if (font.category === "display") {
-        return `family=${font.label.replace(/\s+/g, "+")}:wght@400;700`;
-      } else {
-        return `family=${font.label.replace(/\s+/g, "+")}:wght@400;500;600;700`;
-      }
-    }).join("&");
-    const link = document.createElement("link");
-    link.href = `https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-    return () => {
-      document.head.removeChild(link);
-    };
-  }, []);
 
   const handleFontChange = (currentValue: string) => {
-    if (!currentValue) return; // Guard against undefined values
+    if (!currentValue) return;
     setValue(currentValue);
     setFontOpen(false);
     onFontChange(currentValue);
   };
 
   const handleSizeChange = (currentValue: string) => {
-    if (!currentValue) return; // Guard against undefined values
+    if (!currentValue) return;
     setSize(currentValue);
     setSizeOpen(false);
     onFontSizeChange(currentValue);
   };
 
-  const increaseFontSize = () => {
-    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
-    if (currentIndex < fontSizes.length - 1) {
-      const newSize = fontSizes[currentIndex + 1].value;
-      setSize(newSize);
-      onFontSizeChange(newSize);
-    }
-  };
-
-  const decreaseFontSize = () => {
-    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
-    if (currentIndex > 0) {
-      const newSize = fontSizes[currentIndex - 1].value;
-      setSize(newSize);
-      onFontSizeChange(newSize);
-    }
-  };
-
-  const handleFilterChange = (category: string) => {
-    setFilter(category === filter ? null : category);
-  };
-
-  const filteredFonts = filter ? fonts.filter(font => font.category === filter) : fonts;
+  // Find the current font size numeric value
+  const currentSizeObj = fontSizes.find(fs => fs.value === size);
+  const currentNumericSize = currentSizeObj?.numeric || 12;
   const selectedFont = fonts.find(font => font.value === value);
-  const selectedSize = fontSizes.find(fontSize => fontSize.value === size);
 
   return (
     <div className={`flex ${isMobile ? 'flex-col' : 'items-center'} gap-2`}>
-      {!isMobile && (
-        <div className="flex gap-1">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleFilterChange("sans-serif")} 
-            className={filter === "sans-serif" ? "bg-secondary" : ""}
-          >
-            Sans
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleFilterChange("serif")} 
-            className={filter === "serif" ? "bg-secondary" : ""}
-          >
-            Serif
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleFilterChange("display")} 
-            className={filter === "display" ? "bg-secondary" : ""}
-          >
-            Display
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleFilterChange("handwriting")} 
-            className={filter === "handwriting" ? "bg-secondary" : ""}
-          >
-            Script
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => handleFilterChange("monospace")} 
-            className={filter === "monospace" ? "bg-secondary" : ""}
-          >
-            Mono
-          </Button>
-        </div>
-      )}
-
       <Popover open={fontOpen} onOpenChange={setFontOpen}>
         <PopoverTrigger asChild>
           <Button 
@@ -338,62 +142,25 @@ export function FontLibrary({
             className={`${isMobile ? 'w-full' : 'min-w-[160px]'} justify-between h-8`}
           >
             <span style={{ fontFamily: value }}>
-              {selectedFont?.label || "Select font..."}
+              {selectedFont?.label || "Arial"}
             </span>
             <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[240px] p-0">
+        <PopoverContent className="w-[200px] p-0">
           <Command>
-            <CommandInput placeholder="Search font..." />
-            <CommandEmpty>No font found.</CommandEmpty>
-            <CommandGroup heading="Categories" className={isMobile ? 'flex flex-wrap gap-1 p-2' : 'hidden'}>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFilterChange("sans-serif")} 
-                className={`text-xs ${filter === "sans-serif" ? "bg-secondary" : ""}`}
-              >
-                Sans
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFilterChange("serif")} 
-                className={`text-xs ${filter === "serif" ? "bg-secondary" : ""}`}
-              >
-                Serif
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFilterChange("display")} 
-                className={`text-xs ${filter === "display" ? "bg-secondary" : ""}`}
-              >
-                Display
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFilterChange("handwriting")} 
-                className={`text-xs ${filter === "handwriting" ? "bg-secondary" : ""}`}
-              >
-                Script
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => handleFilterChange("monospace")} 
-                className={`text-xs ${filter === "monospace" ? "bg-secondary" : ""}`}
-              >
-                Mono
-              </Button>
-            </CommandGroup>
-            <CommandGroup className="max-h-[300px] overflow-auto">
-              {filteredFonts.map(font => (
-                <CommandItem key={font.value} value={font.value} onSelect={handleFontChange}>
-                  <Check 
-                    className={cn("mr-2 h-4 w-4", value === font.value ? "opacity-100" : "opacity-0")} 
+            <CommandGroup>
+              {fonts.map(font => (
+                <CommandItem
+                  key={font.value}
+                  value={font.value}
+                  onSelect={handleFontChange}
+                >
+                  <Check
+                    className={cn(
+                      "mr-2 h-4 w-4",
+                      value === font.value ? "opacity-100" : "opacity-0"
+                    )}
                   />
                   <span style={{ fontFamily: font.value }}>{font.label}</span>
                 </CommandItem>
