@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Check, ChevronDown, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -124,6 +125,26 @@ export function FontLibrary({
     setSize(currentValue);
     setSizeOpen(false);
     onFontSizeChange(currentValue);
+  };
+
+  // Define the missing decreaseFontSize function
+  const decreaseFontSize = () => {
+    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
+    if (currentIndex > 0) {
+      const newSize = fontSizes[currentIndex - 1].value;
+      setSize(newSize);
+      onFontSizeChange(newSize);
+    }
+  };
+
+  // Define the missing increaseFontSize function
+  const increaseFontSize = () => {
+    const currentIndex = fontSizes.findIndex(fs => fs.value === size);
+    if (currentIndex < fontSizes.length - 1) {
+      const newSize = fontSizes[currentIndex + 1].value;
+      setSize(newSize);
+      onFontSizeChange(newSize);
+    }
   };
 
   // Find the current font size numeric value

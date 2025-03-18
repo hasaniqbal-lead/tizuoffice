@@ -25,7 +25,7 @@ export function EditableContent({
         fontFamily: fontFamily || 'Arial, sans-serif',
         writingMode: 'horizontal-tb',
         direction: 'ltr',
-        unicodeBidi: 'embed',
+        unicodeBidi: 'bidi-override', // This ensures strong directional override
         textAlign: textAlignment === 'text-left' ? 'left' 
           : textAlignment === 'text-center' ? 'center'
           : textAlignment === 'text-right' ? 'right'

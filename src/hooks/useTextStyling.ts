@@ -32,6 +32,12 @@ export function useTextStyling(activeStyle?: string) {
       case 'heading2':
         document.execCommand('formatBlock', false, '<h2>');
         break;
+      case 'bullet':
+        document.execCommand('insertUnorderedList', false);
+        break;
+      case 'numbered':
+        document.execCommand('insertOrderedList', false);
+        break;
     }
   }, [activeStyle]);
 
