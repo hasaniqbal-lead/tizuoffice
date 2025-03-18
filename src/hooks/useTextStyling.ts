@@ -10,20 +10,7 @@ export function useTextStyling(activeStyle?: string) {
       // Handle alignment styles
       if (activeStyle.startsWith('align-')) {
         const alignment = activeStyle.replace('align-', '');
-        switch (alignment) {
-          case 'left':
-            setTextAlignment('text-left');
-            break;
-          case 'center':
-            setTextAlignment('text-center');
-            break;
-          case 'right':
-            setTextAlignment('text-right');
-            break;
-          case 'justify':
-            setTextAlignment('text-justify');
-            break;
-        }
+        setTextAlignment(`text-${alignment}`);
         return;
       }
 
@@ -54,12 +41,8 @@ export function useTextStyling(activeStyle?: string) {
     }
   }, [activeStyle]);
 
-  const getTextAlignment = () => textAlignment;
-  
-  const getFontStyles = () => fontStyles.join(' ');
-
   return {
-    getTextAlignment,
-    getFontStyles
+    getTextAlignment: () => textAlignment,
+    getFontStyles: () => fontStyles.join(' ')
   };
 }

@@ -21,14 +21,19 @@ export function EditableContent({
       contentEditable="true"
       className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-4 ${fontSize} ${textAlignment} ${fontStyles}`}
       style={{ 
-        fontFamily: `"${fontFamily}", sans-serif`,
-        direction: 'ltr'  // Explicitly set left-to-right text direction
+        fontFamily: `${fontFamily}, sans-serif`,
+        direction: 'ltr',  // Explicitly set left-to-right text direction
+        textAlign: textAlignment === 'text-left' ? 'left' 
+          : textAlignment === 'text-center' ? 'center'
+          : textAlignment === 'text-right' ? 'right'
+          : textAlignment === 'text-justify' ? 'justify'
+          : 'left'
       }}
       onInput={(e) => {
         const target = e.target as HTMLDivElement;
-        onChange(target.innerHTML); // Using innerHTML instead of innerText to preserve formatting
+        const newContent = target.innerHTML;
+        onChange(newContent);
       }}
-      suppressContentEditableWarning={true}
       dangerouslySetInnerHTML={{ __html: content }}
     />
   );
