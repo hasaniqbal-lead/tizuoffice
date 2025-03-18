@@ -7,6 +7,7 @@ import DocumentEditor from "./pages/DocumentEditor";
 import NotFound from "./pages/NotFound";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import { CollaborationProvider } from "@/components/CollaborationProvider";
+import { AppHeader } from "@/components/AppHeader";
 
 import "./App.css";
 
@@ -16,6 +17,7 @@ function App() {
       <CollaborationProvider>
         <TooltipProvider>
           <Router>
+            <AppHeader />
             <Routes>
               <Route path="/" element={<SplashScreen />} />
               <Route path="/document" element={<DocumentEditor />} />
