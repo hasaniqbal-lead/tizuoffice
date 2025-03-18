@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
@@ -176,6 +175,16 @@ export function RibbonMenu({
     });
   };
 
+  const handleFontChange = (font: string) => {
+    if (!font) return; // Guard against undefined values
+    onFontChange(font);
+  };
+
+  const handleSizeChange = (size: string) => {
+    if (!size) return; // Guard against undefined values
+    onFontSizeChange(size);
+  };
+
   const fileExtensions = {
     document: [
       { label: "Word Document (.docx)", value: "docx" },
@@ -194,7 +203,6 @@ export function RibbonMenu({
     ]
   };
 
-  // Map editor types to their routes
   const editorRoutes = {
     document: "/document",
     spreadsheet: "/spreadsheet",
@@ -214,7 +222,6 @@ export function RibbonMenu({
 
   return (
     <div className="flex flex-col">
-      {/* Main menubar */}
       <Menubar className="rounded-none border-b border-t-0 border-l-0 border-r-0 px-2 shadow-sm">
         <MenubarMenu>
           <MenubarTrigger className="font-bold">File</MenubarTrigger>
@@ -363,14 +370,12 @@ export function RibbonMenu({
         </MenubarMenu>
       </Menubar>
 
-      {/* Ribbon toolbar */}
       <Collapsible
         open={!toolbarCollapsed}
         className="w-full border-b border-border"
       >
         <CollapsibleContent className="p-1">
           <div className="flex flex-wrap items-center gap-1 px-1 py-1">
-            {/* Main toolbar sections */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>
@@ -395,11 +400,10 @@ export function RibbonMenu({
 
             <div className="h-10 w-[1px] bg-border mx-1"></div>
 
-            {/* Font Section */}
             <div className="p-0.5 rounded">
               <FontLibrary
-                onFontChange={onFontChange}
-                onFontSizeChange={onFontSizeChange}
+                onFontChange={handleFontChange}
+                onFontSizeChange={handleSizeChange}
                 currentFont={currentFont}
                 currentSize={currentSize}
                 isMobile={isMobile}
@@ -408,7 +412,6 @@ export function RibbonMenu({
 
             <div className="h-10 w-[1px] bg-border mx-1"></div>
 
-            {/* Text Formatting */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>
@@ -454,7 +457,6 @@ export function RibbonMenu({
               <span className="text-xs text-muted-foreground">Format</span>
             </div>
 
-            {/* Alignment */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>
@@ -513,7 +515,6 @@ export function RibbonMenu({
               <span className="text-xs text-muted-foreground">Align</span>
             </div>
 
-            {/* Lists */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>
@@ -548,7 +549,6 @@ export function RibbonMenu({
 
             <div className="h-10 w-[1px] bg-border mx-1"></div>
 
-            {/* Insert Section */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>
@@ -594,7 +594,6 @@ export function RibbonMenu({
               <span className="text-xs text-muted-foreground">Insert</span>
             </div>
 
-            {/* Type-specific Insert options */}
             {editorType === "presentation" && (
               <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
                 <Tooltip>
@@ -635,7 +634,6 @@ export function RibbonMenu({
 
             <div className="h-10 w-[1px] bg-border mx-1"></div>
 
-            {/* Zoom controls */}
             <div className="flex flex-col items-center p-0.5 rounded hover:bg-accent">
               <div className="flex items-center gap-1 mb-1">
                 <Tooltip>

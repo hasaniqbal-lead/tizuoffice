@@ -6,38 +6,44 @@ export function useTextStyling(activeStyle?: string) {
   const [fontStyles, setFontStyles] = useState<string[]>([]);
 
   useEffect(() => {
-    if (activeStyle) {
-      // Handle alignment styles
-      if (activeStyle.startsWith('align-')) {
-        const alignment = activeStyle.replace('align-', '');
-        setTextAlignment(`text-${alignment}`);
-        return;
-      }
+    if (!activeStyle) return;
 
-      // Handle text formatting
-      switch (activeStyle) {
-        case 'bold':
-          setFontStyles(prev => 
-            prev.includes('font-bold') 
-              ? prev.filter(style => style !== 'font-bold')
-              : [...prev, 'font-bold']
-          );
-          break;
-        case 'italic':
-          setFontStyles(prev => 
-            prev.includes('italic') 
-              ? prev.filter(style => style !== 'italic')
-              : [...prev, 'italic']
-          );
-          break;
-        case 'underline':
-          setFontStyles(prev => 
-            prev.includes('underline') 
-              ? prev.filter(style => style !== 'underline')
-              : [...prev, 'underline']
-          );
-          break;
-      }
+    // Handle alignment styles
+    if (activeStyle.startsWith('align-')) {
+      const alignment = activeStyle.replace('align-', '');
+      setTextAlignment(`text-${alignment}`);
+      return;
+    }
+
+    // Handle text formatting
+    switch (activeStyle) {
+      case 'bold':
+        setFontStyles(prev => 
+          prev.includes('font-bold') 
+            ? prev.filter(style => style !== 'font-bold')
+            : [...prev, 'font-bold']
+        );
+        break;
+      case 'italic':
+        setFontStyles(prev => 
+          prev.includes('italic') 
+            ? prev.filter(style => style !== 'italic')
+            : [...prev, 'italic']
+        );
+        break;
+      case 'underline':
+        setFontStyles(prev => 
+          prev.includes('underline') 
+            ? prev.filter(style => style !== 'underline')
+            : [...prev, 'underline']
+        );
+        break;
+      case 'heading1':
+        document.execCommand('formatBlock', false, 'h1');
+        break;
+      case 'heading2':
+        document.execCommand('formatBlock', false, 'h2');
+        break;
     }
   }, [activeStyle]);
 

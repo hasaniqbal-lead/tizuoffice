@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Check, ChevronDown, Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -244,12 +243,14 @@ export function FontLibrary({
   }, []);
 
   const handleFontChange = (currentValue: string) => {
+    if (!currentValue) return; // Guard against undefined values
     setValue(currentValue);
     setFontOpen(false);
     onFontChange(currentValue);
   };
 
   const handleSizeChange = (currentValue: string) => {
+    if (!currentValue) return; // Guard against undefined values
     setSize(currentValue);
     setSizeOpen(false);
     onFontSizeChange(currentValue);
