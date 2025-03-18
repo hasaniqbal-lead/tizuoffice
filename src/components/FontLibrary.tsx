@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Minus, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -91,12 +92,18 @@ export type FontLibraryProps = {
   onFontSizeChange: (size: string) => void;
   currentSize?: string;
   isMobile?: boolean;
+  // Add the following optional prop to fix the error
+  onFontChange?: (font: string) => void;
+  currentFont?: string;
 };
 
 export function FontLibrary({
   onFontSizeChange,
   currentSize = "text-base",
-  isMobile = false
+  isMobile = false,
+  // Add the optional parameters (they won't be used but need to be in the interface)
+  onFontChange,
+  currentFont
 }: FontLibraryProps) {
   const [sizeOpen, setSizeOpen] = useState(false);
   const [size, setSize] = useState(currentSize);
@@ -108,7 +115,7 @@ export function FontLibrary({
     onFontSizeChange(currentValue);
   };
 
-  // Define the decreaseFontSize function
+  // Define decreaseFontSize and increaseFontSize functions
   const decreaseFontSize = () => {
     const currentIndex = fontSizes.findIndex(fs => fs.value === size);
     if (currentIndex > 0) {

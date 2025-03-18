@@ -704,6 +704,7 @@ export function RibbonMenu({
             </div>
           </div>
         </CollapsibleContent>
+
         <CollapsibleTrigger asChild className="flex justify-center border-t border-border">
           <Button variant="ghost" size="sm" className="w-full h-5 rounded-none">
             {toolbarCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
