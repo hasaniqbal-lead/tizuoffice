@@ -188,13 +188,15 @@ export function NoteCanvas({
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-auto p-4">
         <div className={`mx-auto bg-white rounded-md shadow-sm border p-4 min-h-[calc(100vh-220px)] ${orientation === "landscape" ? "landscape-page" : "a4-page"}`}>
-          <style jsx>{`
-            @media print {
-              @page {
-                size: ${orientation === "landscape" ? "landscape" : "portrait"};
+          <style>
+            {`
+              @media print {
+                @page {
+                  size: ${orientation === "landscape" ? "landscape" : "portrait"};
+                }
               }
-            }
-          `}</style>
+            `}
+          </style>
           <div 
             contentEditable="true"
             className={`w-full h-full min-h-[calc(100vh-240px)] outline-none p-0 ${fontSize} ${getTextAlignment()} ${getFontStyles()}`}
